@@ -315,7 +315,7 @@ const Notepad = () => {
             {/* Update Button - Fixed at bottom */}
             <div className="p-4 flex justify-end border-t border-gray-200 animate-fadeInLeft [animation-delay:600ms] mt-auto">
                 <button
-                    className="bg-[#1A73E8] cursor-pointer text-md hover:bg-blue-600 text-white font-medium py-2 px-8 rounded-sm"
+                    className="bg-[#1A73E8] cursor-pointer text-xs hover:bg-blue-600 text-white font-medium py-2 px-8 rounded-sm"
                     onClick={() => saveCurrentNotes(true)}
                 >
                     Update EMR
