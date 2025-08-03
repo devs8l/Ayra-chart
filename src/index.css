@@ -1,0 +1,577 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+  font-family: 'SF';
+  src: url(/fonts/SFPRODISPLAYMEDIUM.OTF);
+}
+
+@font-face {
+  font-family: 'SF-Reg';
+  src: url(/fonts/SFPRODISPLAYREGULAR.OTF);
+}
+
+@font-face {
+  font-family: 'inter';
+  src: url(/fonts/inter-med.ttf);
+}
+
+@font-face {
+  font-family: 'inter-semi';
+  src: url(/fonts/inter-semi.ttf);
+}
+
+@font-face {
+  font-family: 'Scto';
+  src: url(/fonts/scto.ttf);
+}
+
+
+
+
+.css-5wchs2-MuiDateCalendar-root {
+  max-height: 100% !important;
+  margin-left: 0.5vw !important;
+  max-width: 100% !important;
+}
+
+.css-1n1xn3x-MuiPickersSlideTransition-root-MuiDayCalendar-slideTransition {
+  min-height: 180px !important;
+}
+
+.css-1nxbkmn-MuiPickersCalendarHeader-root {
+  max-height: 20px !important;
+  min-height: 0 !important;
+}
+
+.css-1pv2de5-MuiDayCalendar-weekContainer {
+  margin: 0px 0 !important;
+}
+
+
+/* Customize the scrollbar width */
+::-webkit-scrollbar {
+
+  width: 1px;
+  height: 8px;
+  display: none;
+  /* For horizontal scroll */
+}
+
+/* Track (background of scrollbar) */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+/* Handle (the draggable part) */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.bg-custom-gradient {
+  background: linear-gradient(223.71deg, #c8deef 21.94%, #c8d7f3 77.39%);
+  backdrop-filter: blur(1400px);
+}
+
+.dark .bg-custom-gradient {
+  background: linear-gradient(223.71deg, rgba(50, 73, 90, 0.3) 21.94%, rgba(34, 57, 104, 0.3) 77.39%);
+
+  backdrop-filter: blur(1400px);
+}
+
+
+@theme {
+  /* --color-primary: linear-gradient(223.71deg, #B2DFFF 21.94%, #B2CCFF 77.39%); */
+  --color-action-btn: #13181E;
+  --color-card: #FFFFFFCC;
+  --color-primary-text: #222836;
+  --color-body-text: #4C525E;
+
+
+}
+
+
+.semi {
+  font-family: "inter-semi";
+}
+
+.scto {
+  font-family: "Scto";
+}
+
+* {
+  font-family: "inter";
+}
+
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(0px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(2px);
+  }
+}
+
+.roboto {
+  font-family: "Roboto Flex", sans-serif;
+}
+
+
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.3s ease-out forwards;
+}
+
+.animate-fadeInUp-delayed {
+  animation: fadeInUp 0.7s ease-out forwards;
+  animation-delay: 0.4s;
+}
+
+.animate-fadeInDown {
+  animation: fadeInDown 0.3s ease-out forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+
+  /* animation-delay: 1s; */
+}
+
+.animate-fadeIn-slow {
+  animation: fadeIn 1s ease-out forwards;
+
+  /* animation-delay: 1s; */
+}
+
+/* Add this to your global CSS */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+.animated-markdown-container .msg h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222836;
+  font-family: 'inter-semi';
+  /* padding: 0rem 0 1rem 0; */
+}
+
+.medical-heading {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222836;
+  font-family: 'inter-semi';
+}
+
+.animated-markdown-container .msg h3 {
+  font-size: 1.2rem;
+  border-top: #2d37480f 0.1px solid;
+  font-family: 'inter';
+  color: #222836;
+  /* margin-top: 1.5rem; */
+  padding: 1.5rem 0 0 0;
+}
+
+.msg ul {
+  padding: 1.5rem 0 1.5rem 0;
+  margin: 0;
+
+}
+
+.msg p {
+  /* padding: 1rem 0 0rem 0; */
+  color: #4C525E;
+  padding: 1.5rem 0 1.5rem 0;
+
+
+}
+
+
+.msg li {
+  
+
+}
+
+.animated-markdown-container strong {
+  color: #222836;
+  font-family: 'inter-semi';
+}
+
+.animated-markdown-container .medical-term {
+  color: #222836;
+  font-family: 'inter-semi';
+}
+
+
+
+.animate-fadeInFast {
+  animation: fadeIn 0.6s ease-out forwards;
+  /* animation-delay: 1s; */
+}
+
+
+
+
+
+.white-grad {
+  background: #ffffff;
+  background: linear-gradient(0deg, rgba(255, 255, 255, 0.548) 10%, rgba(255, 255, 255, 0) 78%);
+}
+
+.animate-fadeOut {
+  animation: fadeOut 0.01s ease-out forwards;
+  /* animation-delay: 1s; */
+}
+
+.fadeOut {
+  animation: fadeOut 1s ease-out forwards;
+  /* animation-delay: 1s; */
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 90deg;
+  inherits: true;
+}
+
+@property --gradX {
+  syntax: '<percentage>';
+  initial-value: 50%;
+  inherits: true;
+}
+
+@property --gradY {
+  syntax: '<percentage>';
+  initial-value: 0%;
+  inherits: true;
+}
+
+
+.box {
+  --border-angle: 0deg;
+  border-radius: 18px;
+  /* box-shadow: 0px 2px 4px hsl(0 0% 0% / 25%); */
+  animation: border-angle-rotate 1s infinite linear;
+  border: 0.15rem solid transparent;
+  position: relative;
+  background: linear-gradient(white, white) padding-box,
+    conic-gradient(from var(--border-angle),
+      var(--bg) 50%,
+      rgba(92, 142, 212, 0.59)) border-box;
+}
+
+@keyframes border-angle-rotate {
+  from {
+    --border-angle: 0deg;
+  }
+
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+body {
+  --bg: hsl(0, 0%, 100%);
+  background: var(--bg);
+
+
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+
+.animated-markdown-container .medical-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222836;
+  margin-bottom: 1rem;
+  font-family: 'inter';
+}
+
+.animated-markdown-container .medical-subheading {
+  font-size: 1.1rem;
+  border-top: #2d37480f 0.1px solid;
+  font-family: 'inter';
+  color: #222836;
+  padding: 1.3rem 0 0 0;
+}
+
+.animated-markdown-container .medical-paragraph {
+  color: #4C525E;
+  padding: 1.3rem 0 1.3rem 0;
+}
+
+.animated-markdown-container .medical-list {
+  padding: 1.3rem 0 1.3rem 0;
+  margin: 0;
+}
+
+
+.medical-section {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem 0;
+  color: #2d3748;
+}
+
+.medical-list {
+  list-style-type: none;
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+}
+
+.medical-list li {
+  margin: 0.3rem 0;
+  position: relative;
+  padding-left: 1.2rem;
+  color: #4C525E;
+}
+
+.medical-list li:before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: #4a5568;
+  font-weight: bold;
+}
+
+.medical-sublist {
+  list-style-type: none;
+  margin: 0.3rem 0;
+  padding-left: 1.5rem;
+}
+
+.medical-sublist li {
+  margin: 0.2rem 0;
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.medical-sublist li:before {
+  content: "◦";
+  position: absolute;
+  left: 0;
+  color: #4a5568;
+}
+
+.medical-text {
+  margin: 0.5rem 0;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.medical-conclusion {
+  /* margin: 1rem 0; */
+  /* padding: 0.8rem; */
+  /* background-color: #f8f9fa; */
+  /* border-left: 3px solid #4299e1; */
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+
+@keyframes fadeOutLeft {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.5s ease forwards;
+}
+
+.fadeInLeft {
+  animation: fadeInLeft 0.5s ease forwards;
+}
+
+.fadeOutLeft {
+  animation: fadeOutLeft 1s ease forwards;
+}
+
+@keyframes fadeOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fadeInRight {
+  animation: fadeInRight 0.5s ease forwards;
+}
+
+.fadeInSlow {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.fadeInRight-slow {
+  animation: fadeIn 0.8s ease forwards;
+
+}
+
+.fadeOutRight {
+  animation: fadeOutRight 0.1s ease forwards;
+}
+
+
+.loader {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+  margin: 15px auto;
+  position: relative;
+  color: #2b7fff;
+  box-sizing: border-box;
+  animation: animloader 1s linear infinite alternate;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow: -38px -12px, -14px 0, 14px 0, 38px 0;
+  }
+
+  33% {
+    box-shadow: -38px 0px, -14px -12px, 14px 0, 38px 0;
+  }
+
+  66% {
+    box-shadow: -38px 0px, -14px 0, 14px -12px, 38px 0;
+  }
+
+  100% {
+    box-shadow: -38px 0, -14px 0, 14px 0, 38px -12px;
+  }
+}
+
+
+
+/* toast */
+
+@keyframes enter {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes leave {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+.animate-enter {
+  animation: enter 0.2s ease-out forwards;
+}
+
+.animate-leave {
+  animation: leave 0.2s ease-out forwards;
+}
