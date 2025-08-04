@@ -16,6 +16,7 @@ const MedContextProvider = (props) => {
   const [isAuthenticated, setIsAuthenticated] = useState(
     localStorage.getItem('isAuthenticated') === 'true'
   );
+  const [isGeneratePreChartClicked, setIsGeneratePreChartClicked] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [transcriptText, setTranscriptText] = useState("")
   const [isSummaryBoxActive, setIsSummaryBoxActive] = useState(false);
@@ -270,8 +271,9 @@ const MedContextProvider = (props) => {
     activeSummaryData, 
     setActiveSummaryData,
     isCalendarOpen,
-    setIsCalendarOpen
-
+    setIsCalendarOpen,
+    isGeneratePreChartClicked,
+    setIsGeneratePreChartClicked
   };
 
   return <MedContext.Provider value={value}>{props.children}</MedContext.Provider>;

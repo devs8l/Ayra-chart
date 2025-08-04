@@ -78,7 +78,7 @@ const Summary = () => {
 
                     {/* Charts Tab Content */}
                     <div className="flex-1 overflow-y-auto">
-                        {chartsTab === 'visit' ? <VisitPatient setIsChartSelected={setIsChartSelected} setChartsTab={setChartsTab} /> : <MedicalDashboard isChartSelected={isChartSelected} setIsChartSelected={setIsChartSelected} />}
+                        {chartsTab === 'visit' ? <VisitPatient setIsChartSelected={setIsChartSelected} setChartsTab={setChartsTab} /> : <MedicalDashboard isChartSelected={isChartSelected} setViewMode={setViewMode} setIsChartSelected={setIsChartSelected} />}
                     </div>
                 </>
             ) : (
@@ -89,7 +89,7 @@ const Summary = () => {
                     </div>
 
                     {/* Content Tabs (Notepad / Billing Code) */}
-                    <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
+                    {/* <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
                         <button
                             onClick={() => setActiveTab('notepad')}
                             className={`px-4 cursor-pointer text-sm w-1/2 py-2 flex justify-center items-center gap-2 rounded-[5px] ${activeTab === 'notepad'
@@ -110,7 +110,7 @@ const Summary = () => {
                             <ScrollText size={15} className={activeTab === 'billing' ? 'text-[#222836]' : 'text-[#6F7786]'} />
                             Billing Code
                         </button>
-                    </div>
+                    </div> */}
 
                     {/* Tab Content */}
                     <div className="flex-1 overflow-y-auto">

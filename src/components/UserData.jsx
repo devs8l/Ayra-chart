@@ -338,7 +338,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-
 
       <div className="flex flex-col rounded-sm bg-[#ffffff] dark:bg-[#00000099] mx-1 h-[calc(75vh-100px)] overflow-auto">
         {/* View Selection Buttons */}
-        <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
+        {/* <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
           <button
             onClick={() => setActiveView('synopsis')}
             className={`px-4 text-sm w-1/2 py-2 flex justify-center items-center gap-2 rounded-[5px] ${activeView === 'synopsis'
@@ -359,7 +359,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-
             <Ear size={15} className={activeView === 'transcript' ? 'text-[#222836]' : 'text-[#6F7786]'} />
             Transcript
           </button>
-        </div>
+        </div> */}
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-auto px-3">

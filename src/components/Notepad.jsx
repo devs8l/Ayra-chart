@@ -4,12 +4,13 @@ import { MedContext } from "../context/MedContext";
 import { showUserToast } from './CustomToast';
 
 const Notepad = () => {
-    const { 
-        selectedUser, 
-        isUserSelected, 
-        transcriptText 
+    const {
+        selectedUser,
+        isUserSelected,
+        transcriptText,
+        isGeneratePreChartClicked, setIsGeneratePreChartClicked
     } = useContext(MedContext);
-    
+
     const [dropdownOpen, setDropdownOpen] = useState(false);
     //heading
     const [selectedFormat, setSelectedFormat] = useState("Normal");
@@ -43,9 +44,9 @@ const Notepad = () => {
                     title: `${selectedUser.name}'s Notes`,
                     content: '<p class="text-gray-400">Write your notes here...</p>'
                 };
-                
+
                 setCurrentNote(userNote);
-                
+
                 if (editorRef.current) {
                     editorRef.current.innerHTML = userNote.content;
                 }
@@ -55,7 +56,7 @@ const Notepad = () => {
                 title: 'General Notes',
                 content: '<p class="text-gray-400">Write your notes here...</p>'
             });
-            
+
             if (editorRef.current) {
                 editorRef.current.innerHTML = '<p class="text-gray-400">Write your notes here...</p>';
             }
@@ -81,7 +82,72 @@ const Notepad = () => {
                 updateNoteContent(currentContent + `<br/><br/>${transcriptContent}`);
             }
         }
-    }, [updateFromTranscript, transcriptText]);
+    }, [updateFromTranscript, transcriptText, isGeneratePreChartClicked]);
+    const PRECHART_TEMPLATE = `<b>CLINICAL OVERVIEW:</b>
+- 35-year-old female presenting for pre-chemo checkup prior to 3rd cycle
+- Previously tolerated 2 cycles of chemotherapy (Doxorubicin and Cyclophosphamide)
+- Primary diagnosis: Breast Cancer
+- Side effects reported: Moderate nausea, moderate fatigue, severe hair loss
+- No critical alerts at this time (continuous monitoring recommended)
+<br/>
+<br/>
+
+<b>BLOOD ESSENTIALS:</b>
+- WBC: 4.2 x 10³/μL
+- RBC: 4.5 x 10¹²/L
+- Hemoglobin: 10.2 g/dL (Critical)
+- PLT: 145 x 10³/μL
+- CA 15-3: 35 U/mL (Critical)
+- NT-proBNP: 420 pg/mL (Critical)
+- LVEF: 49%
+<br/>
+<br/>
+
+<b>CURRENT TREATMENT:</b>
+- Doxorubicin 60 mg/m²
+- Cyclophosphamide 600 mg/m²
+- Ondansetron 8 mg (for nausea)
+- Vitamin B12 1000 mcg
+<br/>
+<br/>
+
+<b>TREATMENT RESPONSE:</b>
+- 26.5% tumor reduction (current size: 2.5 cm)
+- WBC recovery from nadir of 3.3 x 10³/μL (post-Cycle 1) to 4.2 x 10³/μL
+<br/>
+<br/>
+
+<b>VITAL SIGNS:</b>
+- BP: 120/80 mmHg
+- Blood Sugar: 95 mg/dL
+- O2 Saturation: 97%
+- Heart Rate: 72 bpm
+<br/>
+<br/>
+
+<b>HEMATOLOGICAL STATUS:</b>
+- WBC: 4.2 x 10³/μL (Normal)
+- ANC: 2.7 x 10³/μL (Normal)
+- Hemoglobin: 10.2 g/dL (Critical)
+- Platelets: 220 x 10³/μL (Non-Critical)
+- WBC Nadir (Cycle 1): 1.8 x 10³/μL (Normal)
+- ANC Nadir (Cycle 2): 0.9 x 10³/μL (Normal)
+<br/>
+<br/>
+
+<b>PLAN:</b>
+- Continue current chemotherapy regimen
+- Monitor for myelosuppression
+- Manage side effects (anti-emetics for nausea)
+- Schedule next cycle as planned
+- Follow-up blood work prior to next cycle`;
+
+    useEffect(() => {
+        if (isGeneratePreChartClicked && editorRef.current) {
+            editorRef.current.innerHTML = PRECHART_TEMPLATE;
+            updateNoteContent(PRECHART_TEMPLATE);
+        }
+    }, [isGeneratePreChartClicked]);
 
     // Initialize the editor
     useEffect(() => {
@@ -110,10 +176,10 @@ const Notepad = () => {
                 if (userId) {
                     if (showToast) {
                         editorRef.current.innerHTML = '<p class="text-gray-400">Write your notes here...</p>';
-                        
+
                         const clearedContent = '<p class="text-gray-400">Write your notes here...</p>';
                         updateNoteContent(clearedContent);
-                        
+
                         setUserNotes(prev => ({
                             ...prev,
                             [userId]: {
@@ -169,7 +235,7 @@ const Notepad = () => {
             editorRef.current.focus();
         }
         checkFormatting();
-        
+
         if (editorRef.current) {
             updateNoteContent(editorRef.current.innerHTML);
         }
@@ -229,12 +295,12 @@ const Notepad = () => {
     return (
         <div className="flex flex-col h-full">
             {/* Note Title */}
-            
+
 
             {/* Checkboxes */}
             {isUserSelected && (
-                <div className="p-4 space-y-2 animate-fadeInLeft [animation-delay:300ms] border-b border-gray-200">
-                    <div className="flex items-center gap-2">
+                <div className="">
+                    {/* <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
                             id="update"
@@ -245,7 +311,7 @@ const Notepad = () => {
                         <label htmlFor="update" className="text-sm">
                             Update from transcript and review <span className="text-gray-500">(beta)</span>
                         </label>
-                    </div>
+                    </div> */}
 
                 </div>
             )}
@@ -302,7 +368,7 @@ const Notepad = () => {
             </div>
 
             {/* Rich Text Editor Area - Now takes remaining space */}
-            <div 
+            <div
                 className="flex-1 p-4 outline-none overflow-y-auto animate-fadeInLeft [animation-delay:500px]"
                 ref={editorRef}
                 onClick={handleEditorClick}

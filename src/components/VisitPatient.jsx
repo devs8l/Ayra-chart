@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Calendar, Clock, User, FileText, Activity, Pill, ClipboardList, AlertCircle } from 'lucide-react';
+import { MedContext } from '../context/MedContext';
 
 const VisitPatient = ({ setIsChartSelected,setChartsTab }) => {
+    const { selectedUser } = useContext(MedContext);
     const handleGeneratePreChart = () => {
         // Add your pre-chart generation logic here
         console.log("Generating Pre-Chart...");
@@ -35,15 +37,15 @@ const VisitPatient = ({ setIsChartSelected,setChartsTab }) => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">Name</label>
-                                <p className="text-gray-900 font-medium">Zack Daniel</p>
+                                <p className="text-gray-900 font-medium">{selectedUser?.name || "N/A"}</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">Age</label>
-                                <p className="text-gray-900">35</p>
+                                <p className="text-gray-900">{selectedUser?.age || "35"}</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">Sex</label>
-                                <p className="text-gray-900">Male</p>
+                                <p className="text-gray-900">{selectedUser?.gender || "N/A"}</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">DOB</label>
@@ -51,7 +53,7 @@ const VisitPatient = ({ setIsChartSelected,setChartsTab }) => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">Patient ID</label>
-                                <p className="text-gray-900 font-mono">PT-2025-7842</p>
+                                <p className="text-gray-900 font-mono">#{selectedUser?._id?.slice(-6) || "N/A"}</p>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1">Insurance</label>
@@ -222,9 +224,7 @@ const VisitPatient = ({ setIsChartSelected,setChartsTab }) => {
                     onClick={handleGeneratePreChart}
                     className="bg-[#1A73E8] flex items-center gap-3 cursor-pointer text-xs hover:bg-[#1a56cb] text-white font-medium py-2 px-8 rounded-md"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 17 17" fill="none">
-                        <path d="M8.5 12.5L3.5 7.5L4.9 6.05L7.5 8.65V0.5H9.5V8.65L12.1 6.05L13.5 7.5L8.5 12.5ZM2.5 16.5C1.95 16.5 1.47917 16.3042 1.0875 15.9125C0.695833 15.5208 0.5 15.05 0.5 14.5V11.5H2.5V14.5H14.5V11.5H16.5V14.5C16.5 15.05 16.3042 15.5208 15.9125 15.9125C15.5208 16.3042 15.05 16.5 14.5 16.5H2.5Z" fill="white" />
-                    </svg>
+                    
                     Generate Pre-Chart
                 </button>
             </div>
