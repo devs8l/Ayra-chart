@@ -29,7 +29,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-tl-lg before:z-10">
                     <div className="flex flex-col items-start gap-3 mb-4 ">
                         <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
                             <img
-                                src={userData.profileImage}
+                                src='/avatar.png'
                                 alt="Patient"
                                 className="h-full w-full object-cover"
                                 onError={(e) => {

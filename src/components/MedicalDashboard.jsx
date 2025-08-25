@@ -11,15 +11,16 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const patientId = selectedUser?._id || '12345';
+  const [isChartGenerated, setIsChartGenerated] = useState(false);
   const pdfRef = useRef();
 
   useEffect(() => {
-    if (isChartSelected && !dashboardData) {
+    if (isChartSelected && !dashboardData && !isChartGenerated) {
       fetchDashboardData();
     }
-  }, [isChartSelected, dashboardData]);
-  console.log(dashboardData);
+  }, [dashboardData, isChartSelected,isChartGenerated]);
   
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
@@ -30,6 +31,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
       setDashboardData(sampleData);
     } finally {
       setLoading(false);
+      setIsChartGenerated(true);
     }
   };
 
@@ -40,7 +42,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
 
   const handleDownloadPDF = async () => {
     if (!dashboardData) return;
-    
+
     const patientData = {
       name: dashboardData.patientInfo.name,
       age: dashboardData.patientInfo.age,
@@ -48,7 +50,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
       diagnosis: dashboardData.patientInfo.diagnosis,
       // Add other necessary fields
     };
-    
+
     const pdf = await generatePatientPDF(patientData);
     pdf.save(`${patientData.name}_medical_report.pdf`);
   };
@@ -83,11 +85,11 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
 
   const getStatusDot = (status) => {
     switch (status) {
-      case 'Critical': 
+      case 'Critical':
       case 'critical': return 'bg-[#ef4444]';
-      case 'Normal': 
+      case 'Normal':
       case 'normal': return 'bg-[#10b981]';
-      case 'Non-Critical': 
+      case 'Non-Critical':
       case 'warning': return 'bg-[#eab308]';
       default: return 'bg-[#9ca3af]';
     }
@@ -121,7 +123,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
             ))}
           </div>
         );
-      
+
       case 'table':
         return (
           <div className="border border-[#e5e7eb] rounded-2xl overflow-hidden">
@@ -149,7 +151,56 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
             </table>
           </div>
         );
-      
+
+      case 'text':
+        return (
+          <div className="bg-[#f9fafb] flex flex-col p-4 rounded-l-2xl rounded-t-2xl relative">
+            <div
+              onClick={() => handleSummaryClick(section.content, section.sectionTitle)}
+              className="absolute bottom-[-40px] cursor-pointer p-3 right-0 bg-[#f9fafb] rounded-b-xl"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M6.4 18L5 16.6L14.6 7H6V5H18V17H16V8.4L6.4 18Z" fill="#3472C9" />
+              </svg>
+            </div>
+
+            {/* Summary */}
+            <p className="text-[#374151] mb-4">
+              {section.content.summary}
+            </p>
+
+            {/* Key Points */}
+            {section.content.keyPoints && section.content.keyPoints.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                {section.content.keyPoints.map((point, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center bg-[#e9e9e9] rounded-2xl px-3 py-1 text-sm text-[#374151]"
+                  >
+                    {/* <div className="w-2 h-2 bg-[#595a5c] rounded-full mr-2"></div> */}
+                    {point}
+                  </div>
+                ))}
+              </div>
+            )}
+
+
+            {/* Metrics (if provided) */}
+            {section.content.metrics && Object.keys(section.content.metrics).length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-[#111827] mb-2">Metrics</h4>
+                <ul className="text-sm text-[#4b5563] space-y-1">
+                  {Object.entries(section.content.metrics).map(([key, val], idx) => (
+                    <li key={idx}>
+                      <span className="font-medium">{key}:</span> {val}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return (
           <div className='bg-[#f9fafb] flex flex-col p-4 rounded-l-2xl rounded-t-2xl relative'>
@@ -159,8 +210,8 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
               </svg>
             </div>
             <p className="text-[#374151]">
-              {typeof section.content === 'string' 
-                ? section.content 
+              {typeof section.content === 'string'
+                ? section.content
                 : JSON.stringify(section.content)}
             </p>
           </div>
@@ -170,8 +221,16 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p>Loading medical data...</p>
+      <div className="flex items-center flex-col justify-center h-full">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-12 object-cover mt-[-40px]"
+          src="/loading-star.mkv"
+        ></video>
+        <p>Generating Pre-Chart...</p>
       </div>
     );
   }
@@ -200,7 +259,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
                   <span className="text-sm text-[#ca8a04]">Warnings present</span>
                 </div>
               </div>
-              
+
               <div className='bg-[#f9fafb] flex flex-col p-4 rounded-l-2xl rounded-t-2xl relative'>
                 <div onClick={() => handleSummaryClick(dashboardData.patientInfo, 'Patient Overview')} className='absolute bottom-[-40px] cursor-pointer p-3 right-0 bg-[#f9fafb] rounded-b-xl'>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -208,7 +267,7 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
                   </svg>
                 </div>
                 <p className="text-[#374151] mb-4">
-                  {dashboardData.patientInfo.name}, a {dashboardData.patientInfo.age}-year-old {dashboardData.patientInfo.gender}, 
+                  A {dashboardData.patientInfo.age}-year-old {dashboardData.patientInfo.gender},
                   is presenting for evaluation. Primary diagnosis: {dashboardData.patientInfo.diagnosis}.
                 </p>
                 <p className="text-[#4b5563] text-sm">

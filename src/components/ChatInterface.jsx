@@ -277,9 +277,9 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
                 <div className={` flex w-full gap-7 ${isUserDetailsExpanded ? 'mb-4' : ''}`}>
                   <div className="">
                     <img
-                      src={selectedUser.profileImage || '/default-user.png'}
+                      src='/avatar.png'
                       alt="Patient"
-                      className="w-12 h-12 rounded-full object-cover mt-2"
+                      className="w-10 h-10 rounded-full object-cover mt-2"
                     />
                   </div>
                   <div className={`flex-1 flex flex-col gap-3 border  border-gray-200 rounded-2xl p-4 transition-all duration-300 ease-in-out ${isUserDetailsExpanded ? 'h-auto animate-fadeInDown shadow-xl' : 'overflow-hidden animate-fadeInUp'}`}>

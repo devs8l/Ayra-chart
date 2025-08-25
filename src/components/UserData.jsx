@@ -289,13 +289,13 @@ const UserData = () => {
           <ChevronRight size={15} />
           <h2>{userData.name.split(' ')[0] + ''}</h2>
         </div>
-        <div className="flex items-center py-3 gap-4">
+        {/* <div className="flex items-center py-3 gap-4">
           <div className="flex items-center gap-1">
             <Clock size={15} className="text-gray-500" />
             <p className="text-sm text-gray-500">Today</p>
           </div>
           <p className="text-sm text-gray-500">{userData?.time}</p>
-        </div>
+        </div> */}
         <button
           className="text-gray-500 p-1 hover:bg-gray-100 rounded"
           onClick={() => setIsContentExpanded(!isContentExpanded)}
@@ -309,8 +309,8 @@ const UserData = () => {
 before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-[#ffffff8e] border-gray-300 border p-6 rounded-md mx-1">
           <div className="flex items-start space-x-4 ">
             <img
-              src={userData?.profileImage || "/api/placeholder/80/80"}
-              className="w-13 h-13 rounded-full object-cover"
+              src='/avatar.png'
+              className="w-11 h-11 rounded-full object-cover"
               alt={userData?.name}
             />
             <div className="flex gap-10">
