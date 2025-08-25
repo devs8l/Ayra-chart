@@ -76,7 +76,7 @@ const DayView = () => {
                                             <div className="col-span-5">
                                                 <div className="flex items-center gap-2 sm:gap-4">
                                                     <div className="w-10 h-10 sm:w-9 sm:h-9 bg-blue-100 rounded-full flex items-center overflow-hidden justify-center">
-                                                        <img src={user.profileImage} className="w-full h-full object-cover" alt={user.name} />
+                                                        <img src='/avatar.png' className="w-full h-full object-cover" alt={user.name} />
                                                     </div>
                                                     <div>
                                                         <h3 className="font-medium text-sm sm:text-sm text-gray-900">{user.name}</h3>

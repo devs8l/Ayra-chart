@@ -61,7 +61,7 @@ const ScheduleView = () => {
                 >
                     <div className="grid grid-cols-[2.5rem_auto] sm:grid-cols-[3rem_auto] items-center gap-2 sm:gap-4">
                         <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center overflow-hidden justify-center">
-                            <img src={user.profileImage} className="w-full h-full object-cover" alt={user.name} />
+                            <img src='/avatar.png' className="w-full h-full object-cover" alt={user.name} />
                         </div>
                         <div>
                             <h3 className="font-medium text-sm sm:text-base text-gray-900">{user.name}</h3>
