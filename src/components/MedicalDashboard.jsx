@@ -4,22 +4,25 @@ import { ChatContext } from '../context/ChatContext';
 import { MedContext } from '../context/MedContext';
 import { generatePatientPDF } from '../Services/pdfGenerator';
 import { getPatientComprehensive } from '../Services/dashapi';
+import ShimmerLoader from './ShimmerLoader';
+import PreChartShimmer from './PreChartShimmer';
 
-const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) => {
+const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelected, setViewMode, setIsChartGenerated, dashboardData, setDashboardData }) => {
   const { addSummaryMessage } = useContext(ChatContext);
   const { selectedUser, isGeneratePreChartClicked, setIsGeneratePreChartClicked } = useContext(MedContext);
-  const [dashboardData, setDashboardData] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const patientId = selectedUser?._id || '12345';
-  const [isChartGenerated, setIsChartGenerated] = useState(false);
   const pdfRef = useRef();
 
   useEffect(() => {
     if (isChartSelected && !dashboardData && !isChartGenerated) {
       fetchDashboardData();
+      console.log("Fetching dashboard data...");
     }
-  }, [dashboardData, isChartSelected,isChartGenerated]);
-  
+  }, [dashboardData, isChartSelected, isChartGenerated]);
+
+
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -218,19 +221,51 @@ const MedicalDashboard = ({ isChartSelected, setIsChartSelected, setViewMode }) 
         );
     }
   };
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+
+            clearInterval(interval);
+            return 100;
+          }
+          // Add some pretentious pauses at certain points
+          if (prev === 20 || prev === 45 || prev === 75) {
+            setTimeout(() => { }, 400); // Brief pause
+          }
+          return prev + 0.7; // Slightly slower increment for more realistic feel
+        });
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [loading]);
 
   if (loading) {
     return (
-      <div className="flex items-center flex-col justify-center h-full">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="h-12 object-cover mt-[-40px]"
-          src="/loading-star.mkv"
-        ></video>
-        <p>Generating Pre-Chart...</p>
+      <div className="flex  w-full flex-col  h-full">
+        <PreChartShimmer />
+        {/* Download as PDF Button - Fixed at bottom */}
+        <div className=" p-4 flex justify-end border-t border-[#e5e7eb] mt-auto">
+          <div className='flex items-center gap-4'>
+            <button className="bg-[#5B9BD5] flex items-center gap-3 cursor-not-allowed text-xs text-[#ffffff] font-medium py-2 px-8 rounded-md min-w-[200px] relative overflow-hidden">
+              {/* Progress bar background */}
+              <div
+                className="absolute inset-0 bg-[#1A73E8] transition-all duration-200 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+
+              {/* Button content */}
+              <div className="relative z-10 flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Generating Chart...</span>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

@@ -13,6 +13,8 @@ const Summary = () => {
     const [activeTab, setActiveTab] = useState('notepad');
     const [viewMode, setViewMode] = useState('charts'); // 'notes' or 'charts'
     const [chartsTab, setChartsTab] = useState('visit'); // 'visit' or 'charts'
+    const [isChartGenerated, setIsChartGenerated] = useState(false);
+    const [dashboardData, setDashboardData] = useState(null);
 
     const getTitlePlaceholder = () => {
         if (isUserSelected && selectedUser) {
@@ -78,7 +80,7 @@ const Summary = () => {
 
                     {/* Charts Tab Content */}
                     <div className="flex-1 overflow-y-auto">
-                        {chartsTab === 'visit' ? <VisitPatient setIsChartSelected={setIsChartSelected} setChartsTab={setChartsTab} /> : <MedicalDashboard isChartSelected={isChartSelected} setViewMode={setViewMode} setIsChartSelected={setIsChartSelected} />}
+                        {chartsTab === 'visit' ? <VisitPatient setIsChartSelected={setIsChartSelected} setChartsTab={setChartsTab} /> : <MedicalDashboard isChartSelected={isChartSelected} setViewMode={setViewMode} setIsChartSelected={setIsChartSelected} isChartGenerated={isChartGenerated} setIsChartGenerated={setIsChartGenerated} dashboardData={dashboardData} setDashboardData={setDashboardData} />}
                     </div>
                 </>
             ) : (
