@@ -197,3 +197,56 @@ export const generatePatientPDF = (patientData) => {
         });
     });
 };
+
+
+
+export const notesPDF = (patientData,PRECHART_TEMPLATE) => {
+  const element = document.createElement('div');
+  element.style.position = 'absolute';
+  element.style.left = '-9999px';
+  document.body.appendChild(element);
+
+  element.innerHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${patientData.name} - Clinical Notes</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          
+        }
+        h1 {
+          color: #333;
+          margin-bottom: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Clinical Notes: ${patientData.name}</h1>
+      ${PRECHART_TEMPLATE}
+    </body>
+    </html>
+  `;
+
+  return new Promise((resolve) => {
+    html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: true,
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      document.body.removeChild(element);
+      resolve(pdf);
+    });
+  });
+};

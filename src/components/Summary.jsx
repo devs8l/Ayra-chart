@@ -116,7 +116,7 @@ const Summary = () => {
 
                     {/* Tab Content */}
                     <div className="flex-1 overflow-y-auto">
-                        {activeTab === 'notepad' ? <Notepad /> : <Billingcode />}
+                        {activeTab === 'notepad' ? <Notepad dashboardData={dashboardData}/> : <Billingcode />}
                     </div>
                 </>
             )}

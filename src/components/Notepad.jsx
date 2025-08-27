@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { ChevronDown, Bold, Italic, Link, List, ListOrdered, Undo, Redo } from 'lucide-react';
+import { ChevronDown, ChevronUp, Bold, Italic, Link, List, ListOrdered, Undo, Redo } from 'lucide-react';
 import { MedContext } from "../context/MedContext";
 import { showUserToast } from './CustomToast';
+import { generatePatientPDF, notesPDF } from '../Services/pdfGenerator';
 
-const Notepad = () => {
+const Notepad = ({dashboardData}) => {
     const {
         selectedUser,
         isUserSelected,
@@ -12,6 +13,7 @@ const Notepad = () => {
     } = useContext(MedContext);
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [pdfDropupOpen, setPdfDropupOpen] = useState(false);
     //heading
     const [selectedFormat, setSelectedFormat] = useState("Normal");
     const [updateFromTranscript, setUpdateFromTranscript] = useState(false);
@@ -22,6 +24,7 @@ const Notepad = () => {
         list: false,
         orderedList: false
     });
+    const [showPlaceholder, setShowPlaceholder] = useState(true);
 
     // Store notes content per user with titles
     const [userNotes, setUserNotes] = useState(() => {
@@ -42,23 +45,25 @@ const Notepad = () => {
             if (userId) {
                 const userNote = userNotes[userId] || {
                     title: `${selectedUser.name}'s Notes`,
-                    content: '<p class="text-gray-400">Write your notes here...</p>'
+                    content: ''
                 };
 
                 setCurrentNote(userNote);
 
                 if (editorRef.current) {
                     editorRef.current.innerHTML = userNote.content;
+                    setShowPlaceholder(userNote.content === '' || userNote.content.trim() === '');
                 }
             }
         } else {
             setCurrentNote({
                 title: 'General Notes',
-                content: '<p class="text-gray-400">Write your notes here...</p>'
+                content: ''
             });
 
             if (editorRef.current) {
-                editorRef.current.innerHTML = '<p class="text-gray-400">Write your notes here...</p>';
+                editorRef.current.innerHTML = '';
+                setShowPlaceholder(true);
             }
         }
     }, [selectedUser, isUserSelected]);
@@ -74,15 +79,17 @@ const Notepad = () => {
             const currentContent = editorRef.current.innerHTML;
             const transcriptContent = transcriptText.replace(/\n/g, '<br/>');
 
-            if (currentContent.includes('Write your notes here...') || currentContent.trim() === '') {
+            if (showPlaceholder || currentContent.trim() === '') {
                 editorRef.current.innerHTML = transcriptContent;
                 updateNoteContent(transcriptContent);
+                setShowPlaceholder(false);
             } else {
                 editorRef.current.innerHTML += `<br/><br/>${transcriptContent}`;
                 updateNoteContent(currentContent + `<br/><br/>${transcriptContent}`);
             }
         }
     }, [updateFromTranscript, transcriptText, isGeneratePreChartClicked]);
+
     const PRECHART_TEMPLATE = `<b>CLINICAL OVERVIEW:</b>
 - 35-year-old female presenting for pre-chemo checkup prior to 3rd cycle
 - Previously tolerated 2 cycles of chemotherapy (Doxorubicin and Cyclophosphamide)
@@ -146,6 +153,7 @@ const Notepad = () => {
         if (isGeneratePreChartClicked && editorRef.current) {
             editorRef.current.innerHTML = PRECHART_TEMPLATE;
             updateNoteContent(PRECHART_TEMPLATE);
+            setShowPlaceholder(false);
         }
     }, [isGeneratePreChartClicked]);
 
@@ -156,6 +164,28 @@ const Notepad = () => {
             editorRef.current.focus();
         }
     }, []);
+
+    // Handle paste to only paste plain text
+    const handlePaste = (e) => {
+        e.preventDefault();
+
+        // Clear placeholder if it exists
+        if (showPlaceholder) {
+            editorRef.current.innerHTML = '';
+            setShowPlaceholder(false);
+        }
+
+        // Get plain text from clipboard
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+
+        // Insert plain text at cursor position
+        document.execCommand('insertText', false, text);
+
+        // Update content
+        if (editorRef.current) {
+            updateNoteContent(editorRef.current.innerHTML);
+        }
+    };
 
     // Update note content in state
     const updateNoteContent = (content) => {
@@ -175,9 +205,10 @@ const Notepad = () => {
                 const userId = selectedUser._id || selectedUser.id;
                 if (userId) {
                     if (showToast) {
-                        editorRef.current.innerHTML = '<p class="text-gray-400">Write your notes here...</p>';
+                        editorRef.current.innerHTML = '';
+                        setShowPlaceholder(true);
 
-                        const clearedContent = '<p class="text-gray-400">Write your notes here...</p>';
+                        const clearedContent = '';
                         updateNoteContent(clearedContent);
 
                         setUserNotes(prev => ({
@@ -225,9 +256,9 @@ const Notepad = () => {
     };
 
     const execCommand = (command, value = null) => {
-        if (editorRef.current?.textContent?.trim() === 'Write your notes here...') {
+        if (showPlaceholder) {
             editorRef.current.innerHTML = '';
-            editorRef.current.classList.remove('text-gray-400');
+            setShowPlaceholder(false);
         }
 
         document.execCommand(command, false, value);
@@ -272,16 +303,33 @@ const Notepad = () => {
     };
 
     const handleEditorClick = () => {
-        if (editorRef.current?.textContent?.trim() === 'Write your notes here...') {
+        if (showPlaceholder) {
             editorRef.current.innerHTML = '';
             updateNoteContent('');
-            editorRef.current.classList.remove('text-gray-400');
+            setShowPlaceholder(false);
+            editorRef.current.focus();
         }
     };
 
-    const handleEditorInput = () => {
+    const handleEditorInput = (e) => {
         if (editorRef.current) {
-            updateNoteContent(editorRef.current.innerHTML);
+            const content = editorRef.current.innerHTML;
+            const isEmpty = content === '' || content === '<br>' || content.trim() === '';
+
+            if (isEmpty && !showPlaceholder) {
+                setShowPlaceholder(true);
+            } else if (!isEmpty && showPlaceholder) {
+                setShowPlaceholder(false);
+            }
+
+            updateNoteContent(content);
+        }
+    };
+
+    const handleEditorKeyDown = (e) => {
+        if (showPlaceholder && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) {
+            editorRef.current.innerHTML = '';
+            setShowPlaceholder(false);
         }
     };
 
@@ -290,6 +338,43 @@ const Notepad = () => {
             return `${selectedUser.name}'s notes`;
         }
         return "General notes";
+    };
+
+    const handlePdfDropupToggle = () => {
+        setPdfDropupOpen(!pdfDropupOpen);
+    };
+    console.log("dasdaddada",dashboardData);
+    
+
+    const handlePdfOptionClick = async(option) => {
+        console.log(`Selected: ${option}`);
+        setPdfDropupOpen(false);
+        if (option === 'Pre-Chart') {
+            if (!dashboardData) return;
+                const patientData = {
+                    name: dashboardData.patientInfo.name,
+                    age: dashboardData.patientInfo.age,
+                    gender: dashboardData.patientInfo.gender,
+                    diagnosis: dashboardData.patientInfo.diagnosis,
+                    // Add other necessary fields
+                };
+
+                const pdf = await generatePatientPDF(patientData);
+                pdf.save(`${patientData.name}_medical_report.pdf`);
+        }
+        else if (option === 'Notes') {
+            if (!dashboardData) return;
+            const patientData = {
+                name: dashboardData.patientInfo.name,
+                age: dashboardData.patientInfo.age,
+                gender: dashboardData.patientInfo.gender,
+                diagnosis: dashboardData.patientInfo.diagnosis,
+                // Add other necessary fields
+            };
+
+            const pdf = await notesPDF(patientData,PRECHART_TEMPLATE);
+            pdf.save(`${patientData.name}_clinical_notes-from-notes.pdf`);
+        }
     };
 
     return (
@@ -317,7 +402,7 @@ const Notepad = () => {
             )}
 
             {/* Formatting Toolbar */}
-            <div className="w-full p-4 border-b border-gray-200 animate-fadeInLeft [animation-delay:400ms]">
+            <div className="w-full p-4 border-b border-gray-200 ">
                 <div className="flex items-center gap-2 flex-wrap">
                     <button className="text-gray-500 p-1" onClick={handleUndo}>
                         <Undo size={18} />
@@ -368,23 +453,81 @@ const Notepad = () => {
             </div>
 
             {/* Rich Text Editor Area - Now takes remaining space */}
-            <div
-                className="flex-1 p-4 outline-none overflow-y-auto animate-fadeInLeft [animation-delay:500px]"
-                ref={editorRef}
-                onClick={handleEditorClick}
-                onInput={handleEditorInput}
-                onMouseUp={checkFormatting}
-                onKeyUp={checkFormatting}
-                style={{ minHeight: '200px' }}
-            />
+            <div className="flex-1 relative">
+                {showPlaceholder && (
+                    <div className="absolute top-4 left-4 text-gray-400 pointer-events-none z-10">
+                        Start typing notes manually, or click 'Generate Notes' to generate AI notes.
+                    </div>
+                )}
+                <div
+                    className="flex-1 p-4 outline-none overflow-y-auto  h-full"
+                    ref={editorRef}
+                    onClick={handleEditorClick}
+                    onInput={handleEditorInput}
+                    onKeyDown={handleEditorKeyDown}
+                    onPaste={handlePaste}
+                    onMouseUp={checkFormatting}
+                    onKeyUp={checkFormatting}
+                    style={{ minHeight: '200px' }}
+                />
+            </div>
 
             {/* Update Button - Fixed at bottom */}
-            <div className="p-4 flex justify-end border-t border-gray-200 animate-fadeInLeft [animation-delay:600ms] mt-auto">
+            <div className="p-4 gap-3 flex justify-end border-t border-gray-200  mt-auto relative">
+                <div className="relative">
+                    <button
+                        onClick={handlePdfDropupToggle}
+                        className="border-[#1A73E8] border flex items-center justify-center gap-3 cursor-pointer text-xs text-[#1A73E8] font-medium py-2 px-6 rounded-md"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 17 17" fill="none">
+                            <path d="M8.5 12.5L3.5 7.5L4.9 6.05L7.5 8.65V0.5H9.5V8.65L12.1 6.05L13.5 7.5L8.5 12.5ZM2.5 16.5C1.95 16.5 1.47917 16.3042 1.0875 15.9125C0.695833 15.5208 0.5 15.05 0.5 14.5V11.5H2.5V14.5H14.5V11.5H16.5V14.5C16.5 15.05 16.3042 15.5208 15.9125 15.9125C15.5208 16.3042 15.05 16.5 14.5 16.5H2.5Z" fill="#1A73E8" />
+                        </svg>
+                        Download as PDF
+                        <div className='border-l border-[#1a73e879] pl-2'>
+                            {pdfDropupOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                        </div>
+                    </button>
+
+                    {/* PDF Dropup Menu */}
+                    {pdfDropupOpen && (
+                        <div className="absolute bottom-full left-0 mb-4 w-48 bg-[#3472C91A] border border-gray-200 rounded-lg shadow-lg z-10">
+                            <div className="p-1 flex flex-col gap-1">
+                                <button
+                                    onClick={() => handlePdfOptionClick('Pre-Chart')}
+                                    className="w-full text-left text-[#3472C9]  bg-[#FBFCFE] cursor-pointer rounded-sm px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <path d="M3.55556 12.4444H5.33333V6.22222H3.55556V12.4444ZM7.11111 12.4444H8.88889V3.55556H7.11111V12.4444ZM10.6667 12.4444H12.4444V8.88889H10.6667V12.4444ZM1.77778 16C1.28889 16 0.87037 15.8259 0.522222 15.4778C0.174074 15.1296 0 14.7111 0 14.2222V1.77778C0 1.28889 0.174074 0.87037 0.522222 0.522222C0.87037 0.174074 1.28889 0 1.77778 0H14.2222C14.7111 0 15.1296 0.174074 15.4778 0.522222C15.8259 0.87037 16 1.28889 16 1.77778V14.2222C16 14.7111 15.8259 15.1296 15.4778 15.4778C15.1296 15.8259 14.7111 16 14.2222 16H1.77778ZM1.77778 14.2222H14.2222V1.77778H1.77778V14.2222Z" fill="#3472C9" />
+                                    </svg>
+                                    Pre-Chart
+                                </button>
+                                <button
+                                    onClick={() => handlePdfOptionClick('Notes')}
+                                    className="w-full text-left text-[#3472C9]  bg-[#FBFCFE] cursor-pointer rounded-sm px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="17" viewBox="0 0 18 17" fill="none">
+                                        <path d="M0 10.5V8.5H7V10.5H0ZM0 6.5V4.5H11V6.5H0ZM0 2.5V0.5H11V2.5H0ZM9 16.5V13.425L14.525 7.925C14.675 7.775 14.8417 7.66667 15.025 7.6C15.2083 7.53333 15.3917 7.5 15.575 7.5C15.775 7.5 15.9667 7.5375 16.15 7.6125C16.3333 7.6875 16.5 7.8 16.65 7.95L17.575 8.875C17.7083 9.025 17.8125 9.19167 17.8875 9.375C17.9625 9.55833 18 9.74167 18 9.925C18 10.1083 17.9667 10.2958 17.9 10.4875C17.8333 10.6792 17.725 10.85 17.575 11L12.075 16.5H9ZM10.5 15H11.45L14.475 11.95L14.025 11.475L13.55 11.025L10.5 14.05V15ZM14.025 11.475L13.55 11.025L14.475 11.95L14.025 11.475Z" fill="#3472C9" />
+                                    </svg>
+                                    Notes
+                                </button>
+                                <button
+                                    onClick={() => handlePdfOptionClick('Chart + Notes')}
+                                    className="w-full text-left text-[#3472C9]  bg-[#FBFCFE] cursor-pointer rounded-sm px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-3"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <path d="M3.2 9.6V11.2H1.6C1.16 11.2 0.783333 11.0433 0.47 10.73C0.156667 10.4167 0 10.04 0 9.6V1.6C0 1.16 0.156667 0.783333 0.47 0.47C0.783333 0.156667 1.16 0 1.6 0H9.6C10.04 0 10.4167 0.156667 10.73 0.47C11.0433 0.783333 11.2 1.16 11.2 1.6V3.2H9.6V1.6H1.6V9.6H3.2ZM6.4 16C5.96 16 5.58333 15.8433 5.27 15.53C4.95667 15.2167 4.8 14.84 4.8 14.4V6.4C4.8 5.96 4.95667 5.58333 5.27 5.27C5.58333 4.95667 5.96 4.8 6.4 4.8H14.4C14.84 4.8 15.2167 4.95667 15.53 5.27C15.8433 5.58333 16 5.96 16 6.4V14.4C16 14.84 15.8433 15.2167 15.53 15.53C15.2167 15.8433 14.84 16 14.4 16H6.4ZM6.4 14.4H14.4V6.4H6.4V14.4Z" fill="#3472C9" />
+                                    </svg>
+                                    Chart + Notes
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <button
                     className="bg-[#1A73E8] cursor-pointer text-xs hover:bg-blue-600 text-white font-medium py-2 px-8 rounded-sm"
-                    onClick={() => saveCurrentNotes(true)}
+                    onClick={() => setIsGeneratePreChartClicked(true)}
                 >
-                    Update EMR
+                    Generate Notes
                 </button>
             </div>
         </div>
