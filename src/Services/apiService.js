@@ -2,7 +2,7 @@
 export const fetchPatientHistory = async (patientId) => {
     try {
       const response = await fetch(
-        `https://medicalchat-backend-mongodb.vercel.app/patients/${patientId}/history`
+        `https://p01--ayra-backend--5gwtzqz9pfqz.code.run/api/v1/emr/patient/${patientId}`
       );
       if (!response.ok) throw new Error('Failed to fetch history');
       return await response.json();

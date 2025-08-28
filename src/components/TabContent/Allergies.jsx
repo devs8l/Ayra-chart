@@ -4,20 +4,30 @@ import { MedContext } from '../../context/MedContext';
 import { ChatContext } from '../../context/ChatContext';
 import { getSummaryFollowUp } from '../../Services/apiService';
 
-const Allergies = ({ userData, patientHistory }) => {
+const Allergies = ({ patientHistory }) => {
   const [filter, setFilter] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const patientId = patientHistory?.rawData?._id
-  const { setFollowUpQuestions,setIsLoadingFollowUp, setIsAllergiesBoxSelected} = useContext(MedContext)
-  const {addSummaryMessage}=useContext(ChatContext)
+  const { setFollowUpQuestions, setIsLoadingFollowUp, setIsAllergiesBoxSelected, selectedUser } = useContext(MedContext);
+  const { addSummaryMessage } = useContext(ChatContext);
+  
+  const patientId = selectedUser?.resource?.id;
 
-  // Assuming userData contains an allergies array
-  // If not provided, use empty array as fallback
-  const allergies = userData?.allergies || [];
+  // Extract allergies from the FHIR Bundle
+  const allergies = patientHistory?.entry?.map(entry => {
+    const divContent = entry.resource.text?.div;
+    // Extract text content from the div (simple approach - might need more robust parsing)
+    const allergyName = divContent ? divContent.replace(/<[^>]+>/g, '') : 'Unknown allergy';
+    return {
+      id: entry.resource.id,
+      name: allergyName,
+      clinicalStatus: entry.resource.clinicalStatus?.coding?.[0]?.display || 'Unknown status',
+      verificationStatus: entry.resource.verificationStatus?.coding?.[0]?.display || 'Unknown verification',
+      category: entry.resource.category?.[0] || 'Unknown category',
+      criticality: entry.resource.criticality || 'Unknown criticality'
+    };
+  }) || [];
 
-  // Filter allergies based on selection (this would be more complex in a real app)
-  // For demo purposes, we're just showing all allergies regardless of filter
-  const filteredAllergies = allergies;
+  const filteredAllergies = allergies; // Filtering logic can be added here if needed
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -27,23 +37,20 @@ const Allergies = ({ userData, patientHistory }) => {
     setFilter(value);
     setIsDropdownOpen(false);
   };
-  console.log(userData);
-
 
   const handleAllergiesClick = async (allergy) => {
     setIsLoadingFollowUp(true);
     console.log("Loading started");
-    setIsAllergiesBoxSelected(true)
+    setIsAllergiesBoxSelected(true);
 
     // Create a copy of the visit data and add the allergy
     const visitWithAllergy = {
-      icon:'/Allergies.svg',
-      allergies: allergy // or you might want to append to existing allergies if they exist
+      icon: '/Allergies.svg',
+      allergies: allergy.name // Using the extracted allergy name
     };
 
     addSummaryMessage(patientId, visitWithAllergy);
   };
-
 
   return (
     <div className="flex flex-col gap-4">
@@ -90,20 +97,17 @@ const Allergies = ({ userData, patientHistory }) => {
       {filteredAllergies.length > 0 ? (
         filteredAllergies.map((allergy, index) => (
           <div
-            key={index}
+            key={allergy.id || index}
             onClick={() => handleAllergiesClick(allergy)}
             className="p-4 text-sm bg-white border cursor-pointer border-gray-200 rounded-sm"
           >
-            {allergy}
+            {allergy.name}
           </div>
         ))
       ) : (
-        // Demo data to match the image
-        <>
-          <div className="p-4 text-sm bg-white border border-gray-200 rounded-sm">
-            No allergies reported.
-          </div>
-        </>
+        <div className="p-4 text-sm bg-white border border-gray-200 rounded-sm">
+          No allergies reported.
+        </div>
       )}
     </div>
   );

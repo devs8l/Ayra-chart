@@ -148,7 +148,9 @@ const ChatContextProvider = (props) => {
 
   const getTokenContent = (visitData) => {
     if (!visitData) return null;
-
+    if (visitData.visitType === 'chart') {
+      return `${visitData.notes} , Data from pre-chart noted on ${formatDate(visitData.date)}`;
+    }
     if (visitData.visitType === 'medicalSummary') {
       return `${visitData.notes} , Summary noted on ${formatDate(visitData.date)}`;
     }
@@ -220,7 +222,8 @@ const ChatContextProvider = (props) => {
   const sendMessage = async (message, files = [], tokens) => {
     setInputMessage('');
     if (!message.trim() && files.length === 0) return;
-
+    console.log('token',tokens);
+    
     let extractedText = "";
     if (files.length > 0) {
       try {
@@ -256,9 +259,8 @@ const ChatContextProvider = (props) => {
           .join(' and '); // Join with 'and'
 
 
-        const prompt = message + 'Priortize this content for response more : ' + tokenContents + 'Give concise(Shorter) and data dependent response and present it like you are a assistant to  a doctor';
-
-
+        const prompt = message + ' Priortize this content for response more : ' + tokenContents + ' Give concise(Shorter) and data dependent response and present it like you are a assistant to  a doctor';
+        console.log("Prompt for medical analysis:", prompt);
 
         if (!historyData) {
           throw new Error('Failed to fetch patient history');
