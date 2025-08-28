@@ -29,7 +29,7 @@ import UserShimmer from "./UserShimmer";
 const UserData = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { users, filteredUsers, setIsUserSelected, setIsContentExpanded, isContentExpanded, isPatientRoute } = useContext(MedContext);
+  const { users, filteredUsers, setIsUserSelected, setIsContentExpanded, isContentExpanded,selectedUser, isPatientRoute,currentPatient, setCurrentPatient } = useContext(MedContext);
   const { userMessages, isSessionActive, elapsedTime, startSession, endSession, activeSessionUserId } = useContext(ChatContext);
   const [userData, setUserData] = useState(null);
   const [activeTab, setActiveTab] = useState("summaries");
@@ -46,15 +46,19 @@ const UserData = () => {
       setIsUserSelected(false);
     };
   }, [setIsUserSelected]);
+  
+  
 
   useEffect(() => {
-    let user = filteredUsers.find((u) => u._id === id);
+    let user = filteredUsers.find((u) => u?.resource?.id === id);
     if (!user) {
-      user = users.find((u) => u._id === id);
+      user = users.find((u) => u?.resource?.id === id);
     }
+    
+    
     if (user) {
       setUserData(user);
-      const cachedHistory = localStorage.getItem(`patientHistory_${user._id}`);
+      const cachedHistory = localStorage.getItem(`patientHistory_${user?.resource?.id}`);
       if (cachedHistory) {
         try {
           setPatientHistory(JSON.parse(cachedHistory));
@@ -68,22 +72,17 @@ const UserData = () => {
     }
   }, [id, filteredUsers, users]);
 
+  
+
   const getPatientHistory = async () => {
     if (!userData) return;
 
     setIsLoadingReports(true);
     try {
-      const historyData = await fetchPatientHistory(userData._id);
-      const analysisData = await analyzePatientHistory(historyData);
+      const historyData = await fetchPatientHistory(userData?.resource?.id);
 
-      const historyObj = {
-        rawData: historyData,
-        analysis: analysisData,
-        timestamp: new Date().toISOString(),
-      };
-
-      setPatientHistory(historyObj);
-      localStorage.setItem(`patientHistory_${userData._id}`, JSON.stringify(historyObj));
+      setPatientHistory(historyData);
+      localStorage.setItem(`patientHistory_${userData?.resource?.id}`, JSON.stringify(historyData));
     } catch (error) {
       console.error('Error processing history:', error);
     } finally {
@@ -96,7 +95,7 @@ const UserData = () => {
 
     setIsLoadingHealthMetrics(true);
     try {
-      const metricsData = await fetchHealthMetrics(userData._id);
+      const metricsData = await fetchHealthMetrics(userData?.resource?.id);
       setHealthMetricsData(metricsData);
     } catch (error) {
       console.error('Error fetching health metrics:', error);
@@ -110,7 +109,7 @@ const UserData = () => {
     if (activeTab === 'vitals' && userData) {
       getHealthMetrics();
     }
-  }, [activeTab, userData?._id]);
+  }, [activeTab, userData?.resource?.id]);
 
   useEffect(() => {
     if (activeTab === 'summaries' && userData && !patientHistory) {
@@ -119,8 +118,8 @@ const UserData = () => {
   }, [activeTab, userData, patientHistory]);
 
   useEffect(() => {
-    if (userData && userMessages[userData._id]) {
-      const messages = userMessages[userData._id].filter(msg => !msg.isInitial);
+    if (userData && userMessages[userData?.resource?.id]) {
+      const messages = userMessages[userData?.resource?.id].filter(msg => !msg.isInitial);
       const chatEvents = [];
 
       let sessionDate = new Date();
@@ -129,13 +128,13 @@ const UserData = () => {
 
       for (let i = 0; i < messages.length; i++) {
         if (messages[i].type === 'user') {
-          const storedDate = localStorage.getItem(`sessionStarted_${userData._id}_${i}`);
+          const storedDate = localStorage.getItem(`sessionStarted_${userData?.resource?.id}_${i}`);
           if (storedDate) {
             sessionDate = new Date(storedDate);
           } else {
             sessionDate = new Date();
             sessionDate.setDate(sessionDate.getDate() - (messages.length - i) / 2);
-            localStorage.setItem(`sessionStarted_${userData._id}_${i}`, sessionDate.toISOString());
+            localStorage.setItem(`sessionStarted_${userData?.resource?.id}_${i}`, sessionDate.toISOString());
           }
 
           if (!lastSessionDate || sessionDate.toDateString() !== lastSessionDate.toDateString()) {
@@ -174,13 +173,13 @@ const UserData = () => {
 
   const clearCachedData = () => {
     if (userData) {
-      localStorage.removeItem(`patientHistory_${userData._id}`);
+      localStorage.removeItem(`patientHistory_${userData?.resource?.id}`);
       setPatientHistory(null);
       getPatientHistory();
     }
   };
 
-  if (!userData) {
+  if (!selectedUser) {
     return <UserShimmer/>;
   }
 
@@ -287,7 +286,7 @@ const UserData = () => {
         <div className="flex gap-1 text-lg py-4 items-center text-[#222836]">
           <h2 className="cursor-pointer" onClick={() => navigate(isPatientRoute ? "/patients" : "/")}>{isPatientRoute ? "Patients" : "Appointments"}</h2>
           <ChevronRight size={15} />
-          <h2>{userData.name.split(' ')[0] + ''}</h2>
+          <h2>{selectedUser?.resource?.name[0]?.given[0]}</h2>
         </div>
         {/* <div className="flex items-center py-3 gap-4">
           <div className="flex items-center gap-1">
@@ -309,23 +308,23 @@ const UserData = () => {
 before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-[#ffffff8e] border-gray-300 border p-6 rounded-md mx-1">
           <div className="flex items-start space-x-4 ">
             <img
-              src='/avatar.png'
-              className="w-11 h-11 rounded-full object-cover"
-              alt={userData?.name}
+              src={'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
+              className="w-13 h-13 rounded-full object-cover"
+              
             />
             <div className="flex gap-10">
               <div className="flex flex-col gap-2">
-                <h2 className="text-sm  text-gray-800">Name: <span className="font-medium text-gray-500">{userData?.name}</span></h2>
+                <h2 className="text-sm  text-gray-800">Name: <span className="font-medium text-gray-500">{selectedUser?.resource?.name[0]?.given[0]} {selectedUser?.resource?.name[0]?.family}</span></h2>
                 <div className="flex gap-1">
                   <h2 className="text-sm  text-gray-800">Patient ID: </h2>
-                  <p className="text-sm text-gray-500">#{userData?._id?.slice(-6)}</p>
+                  <p className="text-sm text-gray-500">#{selectedUser?.resource?.id?.slice(-6)}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <h2 className="text-sm  text-gray-800">Sex: <span className="font-medium text-gray-500">{userData?.gender}</span></h2>
+                <h2 className="text-sm  text-gray-800">Sex: <span className="font-medium text-gray-500">{selectedUser?.resource?.gender}</span></h2>
                 <div className="flex gap-1">
                   <h2 className="text-sm  text-gray-800">Age: </h2>
-                  <p className="text-sm text-gray-500">35</p>
+                  <p className="text-sm text-gray-500">{selectedUser?.resource?.birthDate}</p>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -338,7 +337,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-
 
       <div className="flex flex-col rounded-sm bg-[#ffffff] dark:bg-[#00000099] mx-1 h-[calc(75vh-100px)] overflow-auto">
         {/* View Selection Buttons */}
-        {/* <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
+        <div className="flex items-center border-b border-gray-300 p-3 gap-3 justify-between sticky top-0 bg-white z-10">
           <button
             onClick={() => setActiveView('synopsis')}
             className={`px-4 text-sm w-1/2 py-2 flex justify-center items-center gap-2 rounded-[5px] ${activeView === 'synopsis'
@@ -359,7 +358,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-l-lg before:z-10 bg-
             <Ear size={15} className={activeView === 'transcript' ? 'text-[#222836]' : 'text-[#6F7786]'} />
             Transcript
           </button>
-        </div> */}
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-auto px-3">

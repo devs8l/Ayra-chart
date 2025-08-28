@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { MedContext } from "../../context/MedContext";
 
 const DayView = () => {
-    const { filteredUsers, searchQuery, searchFilteredUsers, setIsContentExpanded,isLoading,setIsUserSelected,setSelectedUser,setIsPatientRoute,isCalendarOpen, setIsCalendarOpen } = useContext(MedContext);
+    const { filteredUsers, searchQuery, searchFilteredUsers, setIsContentExpanded,isLoading,setIsUserSelected,setSelectedUser,setIsPatientRoute,isCalendarOpen, setIsCalendarOpen,users } = useContext(MedContext);
     const [expandedUserId, setExpandedUserId] = useState(null);
     const displayedUsers = searchQuery ? searchFilteredUsers : filteredUsers;
 
@@ -56,18 +56,18 @@ const DayView = () => {
                     </div>
 
                     <div className="space-y-0 max-h-[50vh] sm:max-h-[65vh] overflow-y-auto">
-                        {todayPatients.length > 0 ? (
-                            todayPatients.map((user, index) => {
-                                const isExpanded = expandedUserId === user._id;
+                        {users.length > 0 ? (
+                            users.map((user, index) => {
+                                const isExpanded = expandedUserId === user?.resource?.id;
 
                                 return (
-                                    <div key={user._id}>
+                                    <div key={user?.resource?.id}>
                                         <div
                                             className={`overflow-hidden transition-all duration-100 ease-in rounded-md border-l-4 border-[#fff0] grid grid-cols-12 gap-2 items-center sm:py-3 px-5   cursor-pointer my-2 ${isExpanded
                                                 ? 'bg-[#ffffff] shadow-md  border-green-500  '
                                                 : 'hover:bg-[#ffffff] hover:shadow-md'
                                                 }`}
-                                            onClick={() => handleCardClick(user._id)}
+                                            onClick={() => handleCardClick(user?.resource?.id)}
                                         >
                                             <div className="col-span-1 text-xs sm:text-xs">
                                                 {index + 1}
@@ -79,8 +79,8 @@ const DayView = () => {
                                                         <img src='/avatar.png' className="w-full h-full object-cover" alt={user.name} />
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-medium text-sm sm:text-sm text-gray-900">{user.name}</h3>
-                                                        <p className="text-xs sm:text-sm text-gray-500">#{user._id.slice(-7)}</p>
+                                                        <h3 className="font-medium text-sm sm:text-sm text-gray-900">{user?.resource?.name[0]?.given[0]} {user?.resource?.name[0]?.family}</h3>
+                                                        <p className="text-xs sm:text-sm text-gray-500">#{user?.resource?.id.slice(-6)}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -95,7 +95,7 @@ const DayView = () => {
 
                                             <div className="col-span-3 flex gap-2 items-center text-xs sm:text-sm text-gray-500">
                                                 <Clock size={14} className="" />
-                                                <span>{user.time}</span>
+                                                <span>9-10 PM</span>
                                             </div>
 
                                             <div className={`col-span-12 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-80' : 'max-h-0'
@@ -104,7 +104,7 @@ const DayView = () => {
                                                     <div className="flex flex-col gap-2 sm:gap-3">
                                                         <div className="flex gap-2">
                                                             <button className="flex gap-3 w-1/4 text-xs sm:text-sm border border-gray-500 text-gray-500 justify-center items-center rounded-xl px-2 sm:px-3 py-0.5">
-                                                                Sex: {user.gender}
+                                                                Sex: {''}
                                                             </button>
                                                             <button className="flex gap-1 w-1/4 text-xs sm:text-sm border border-gray-500 text-gray-500 justify-center items-center rounded-xl px-2 sm:px-3 py-0.5">
                                                                 Age: 28
@@ -114,7 +114,7 @@ const DayView = () => {
                                                             </button>
                                                         </div>
                                                         <Link
-                                                            to={`/user/${user._id}`}
+                                                            to={`/user/${user?.resource?.id}`}
                                                             className="contents"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();

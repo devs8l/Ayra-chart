@@ -29,7 +29,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-tl-lg before:z-10">
                     <div className="flex flex-col items-start gap-3 mb-4 ">
                         <div className="flex-shrink-0 h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
                             <img
-                                src='/avatar.png'
+                                src={userData?.profileImage || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
                                 alt="Patient"
                                 className="h-full w-full object-cover"
                                 onError={(e) => {
@@ -39,8 +39,8 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-tl-lg before:z-10">
                             />
                         </div>
                         <div className="min-w-0 ">
-                            <p className="text-sm text-primary-text truncate w-3/4">Name: <span className='text-body-text'>{userData.name}</span> </p>
-                            <p className="text-sm text-primary-text truncate">Patient ID: <span className='text-body-text'>#{userData?._id?.slice(-6)}</span> </p>
+                            <p className="text-sm text-primary-text truncate w-3/4">Name: <span className='text-body-text'>{userData?.resource?.name[0]?.given[0] || ''}</span> </p>
+                            <p className="text-sm text-primary-text truncate">Patient ID: <span className='text-body-text'>#{userData?.resource?.id.slice(-6)}</span> </p>
                             <p className="text-sm text-primary-text truncate">MRN:<span className='text-body-text'> TEMP12345</span> </p>
                         </div>
                     </div>
@@ -48,7 +48,7 @@ before:h-full before:w-1 before:bg-green-500 before:rounded-tl-lg before:z-10">
 
                 {/* Patient Details Section */}
                 <div className="p-4 border-b border-gray-200">
-                    <p className="text-sm text-primary-text truncate w-3/4">Sex:<span className='text-body-text'>{userData.gender}</span> </p>
+                    <p className="text-sm text-primary-text truncate w-3/4">Sex:<span className='text-body-text'>{userData?.gender || ''}</span> </p>
                     <p className="text-sm text-primary-text truncate">Weight:<span className='text-body-text'>64kg</span> </p>
                     <p className="text-sm text-primary-text truncate">Age:<span className='text-body-text'>32</span> </p>
                 </div>

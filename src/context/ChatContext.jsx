@@ -69,14 +69,14 @@ const ChatContextProvider = (props) => {
 
   // Get current messages - either selected user or general
   const messages = selectedUser
-    ? (userMessages[selectedUser._id] || [isSessionActive ? defaultGeneralMessage : defaultGeneralMessage])
+    ? (userMessages[selectedUser.resource.id] || [isSessionActive ? defaultGeneralMessage : defaultGeneralMessage])
     : (userMessages.general || [defaultGeneralMessage]);
 
   const [showInitialState, setShowInitialState] = useState(true)
 
   // Update current messages - either for selected user or general
   const setMessages = (newMessages) => {
-    const messageKey = selectedUser ? selectedUser._id : 'general';
+    const messageKey = selectedUser ? selectedUser.resource.id : 'general';
 
     setUserMessages(prevUserMessages => ({
       ...prevUserMessages,
@@ -89,19 +89,19 @@ const ChatContextProvider = (props) => {
 
   // Load chat history for selected user
   useEffect(() => {
-    if (selectedUser && !userMessages[selectedUser._id]) {
+    if (selectedUser && !userMessages[selectedUser.resource.id]) {
       // Initialize this user's messages with appropriate default message based on session state
       setUserMessages(prev => ({
         ...prev,
-        [selectedUser._id]: [isSessionActive ? defaultPatientMessage : defaultGeneralMessage]
+        [selectedUser.resource.id]: [isSessionActive ? defaultPatientMessage : defaultGeneralMessage]
       }));
 
       // Optionally, you could fetch chat history from an API here
-      // fetchChatHistory(selectedUser._id).then(history => {
+      // fetchChatHistory(selectedUser.resource.id).then(history => {
       //   if (history && history.length > 0) {
       //     setUserMessages(prev => ({
       //       ...prev,
-      //       [selectedUser._id]: history
+      //       [selectedUser.resource.id]: history
       //     }));
       //   }
       // });
@@ -200,10 +200,6 @@ const ChatContextProvider = (props) => {
         treatmentsText +
         notesText
       );
-
-    }
-    if (visitData?.visitType === 'chart') {
-      return `${visitData.notes}`;
     }
 
     return null;
@@ -254,13 +250,12 @@ const ChatContextProvider = (props) => {
       if (selectedUser) {
         // Patient-specific flow
         // First, fetch the patient history
-        const historyData = await fetchPatientHistory(selectedUser._id);
-        const tokenContents = tokens[selectedUser._id]?.map(token => getTokenContent(token.visitData))
+        const historyData = await fetchPatientHistory(selectedUser.resource.id);
+        const tokenContents = tokens[selectedUser.resource.id]?.map(token => getTokenContent(token.visitData))
           .filter(Boolean) // Remove any null/undefined
           .join(' and '); // Join with 'and'
 
 
-        console.log("Processed token contents:", tokenContents);
         const prompt = message + 'Priortize this content for response more : ' + tokenContents + 'Give concise(Shorter) and data dependent response and present it like you are a assistant to  a doctor';
 
 
@@ -290,7 +285,8 @@ const ChatContextProvider = (props) => {
         // Format the API response
         // const formattedContent = formatMedicalResponse(data.formatted_response);
 
-        console.log("API response data:", data, "anddddddddd", prompt);
+        // Add bot response to messages
+        console.log(data.structured_data);
 
 
         setMessages((prev) => [
@@ -303,10 +299,13 @@ const ChatContextProvider = (props) => {
         ]);
       } else {
         // General health chat flow - using a different endpoint without patient data
-        // Fetch data from the first API
-        const patientsResponse = await fetch(
-          'https://medicalchat-backend-mongodb.vercel.app/patients/doctors-view'
-        );
+        
+        const patientsResponse = await fetch('https://p01--ayra-backend--5gwtzqz9pfqz.code.run/api/v1/emr/patients', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
         const patientsData = await patientsResponse.json();
 
         const generalPrompt = message + extractedText + 'Give concise(Shorter) and data dependent response and present it like you are a assistant to a doctor';
@@ -382,7 +381,7 @@ const ChatContextProvider = (props) => {
       if (selectedUser) {
         // Patient-specific regeneration
         // Fetch patient history
-        const historyData = await fetchPatientHistory(selectedUser._id);
+        const historyData = await fetchPatientHistory(selectedUser.resource.id);
 
         if (!historyData) {
           throw new Error('Failed to fetch patient history');
@@ -419,9 +418,14 @@ const ChatContextProvider = (props) => {
         ]);
       } else {
         // General health chat regeneration
-        const patientsResponse = await fetch(
-          'https://medicalchat-backend-mongodb.vercel.app/patients/doctors-view'
-        );
+        
+
+        const patientsResponse = await fetch('https://p01--ayra-backend--5gwtzqz9pfqz.code.run/api/v1/emr/patients', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
         const patientsData = await patientsResponse.json();
 
         // Post data to the second API
@@ -475,8 +479,15 @@ const ChatContextProvider = (props) => {
   // Fetch patient history
   const fetchPatientHistory = async (selectedUserId) => {
     try {
+  
       const response = await fetch(
-        `https://medicalchat-backend-mongodb.vercel.app/patients/${selectedUserId}/history`
+        `https://p01--ayra-backend--5gwtzqz9pfqz.code.run/api/v1/emr/patient/${selectedUserId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
       );
       if (!response.ok) throw new Error('Failed to fetch history');
       const historyData = await response.json();
@@ -489,7 +500,106 @@ const ChatContextProvider = (props) => {
     }
   };
 
+  // Handle clock click (fetch and analyze patient history)
+  const handleClockClick = async () => {
+    // If no user is selected, show a general health tips response
+    if (!selectedUser) {
+      setIsloadingHistory(true);
+      try {
+        const response = await fetch(
+          `https://medicalchat-tau.vercel.app/general_health_chat/${encodeURIComponent("Provide general health tips and wellness advice")}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query: "general health tips" }),
+          }
+        );
 
+        if (!response.ok) {
+          throw new Error('Failed to get general health tips');
+        }
+
+        const data = await response.json();
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            type: 'bot',
+            content: data.content || 'Here are some general health tips...',
+            isInitial: false,
+          },
+        ]);
+      } catch (error) {
+        console.error('Error fetching general health tips:', error);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            type: 'bot',
+            content: 'Unable to retrieve health tips at this time. Please try again later.',
+            isInitial: false,
+          },
+        ]);
+      } finally {
+        setIsloadingHistory(false);
+      }
+      return;
+    }
+
+    try {
+      setIsloadingHistory(true);
+
+      // Fetch patient history
+      const historyData = await fetchPatientHistory(selectedUser?.resource?.id);
+
+      if (!historyData) {
+        throw new Error('No patient history found');
+      }
+
+      // Fetch analysis with a more dynamic query
+      const analysisResult = await fetch(
+        `https://medicalchat-tau.vercel.app/testmedical_analysis/Provide a comprehensive overview of this patient's medical history`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(historyData),
+        }
+      );
+
+      if (!analysisResult.ok) {
+        throw new Error('Failed to analyze patient history');
+      }
+
+      const analysisData = await analysisResult.json();
+
+      // Add bot message with consistent type
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          type: 'bot',
+          content: analysisData.content || 'No analysis available',
+          isInitial: false,
+        },
+      ]);
+    } catch (error) {
+      console.error('Error fetching/analyzing patient history:', error);
+
+      // Add error message to chat
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          type: 'bot',
+          content: 'Unable to retrieve patient history. Please try again.',
+          isInitial: false,
+        },
+      ]);
+    } finally {
+      setIsloadingHistory(false);
+    }
+  };
 
   // Option to clear chat history
   const clearChatHistory = (userId = null) => {
@@ -507,7 +617,7 @@ const ChatContextProvider = (props) => {
       // Clear history for currently selected user
       setUserMessages(prev => ({
         ...prev,
-        [selectedUser._id]: [clearMessage]
+        [selectedUser.resource.id]: [clearMessage]
       }));
     } else {
       // Clear general chat history
@@ -591,6 +701,7 @@ const ChatContextProvider = (props) => {
     regenerateMessage,
     isMessageLoading,
     isloadingHistory,
+    handleClockClick,
     clearChatHistory,
     userMessages,
     // Session-related state and functions

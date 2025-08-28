@@ -8,7 +8,7 @@ export const ChatTabsContext = createContext();
 export const ChatTabsProvider = ({ children }) => {
     // Get chat functions from ChatContext
     const { clearChatHistory, endSession, userMessages } = useContext(ChatContext);
-    const { setSelectedUser, setIsUserSelected } = useContext(MedContext);
+    const { setSelectedUser, selectedUser, setIsUserSelected, currentPatient, setCurrentPatient } = useContext(MedContext);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -54,7 +54,7 @@ export const ChatTabsProvider = ({ children }) => {
 
     const switchToGeneralTab = useCallback(() => {
         if (activeTabId === 'general') return;
-    
+
         safeTransition(() => {
             setActiveTabId('general');
             setSelectedUser(null);
@@ -63,23 +63,29 @@ export const ChatTabsProvider = ({ children }) => {
         });
     }, [activeTabId, navigate, safeTransition, setSelectedUser, setIsUserSelected]);
 
-    const switchToTab = useCallback((userId) => {
-        if (userId === activeTabId) return;
+    const switchToTab = useCallback((patientId) => {
+
+
+        if (patientId === activeTabId) return;
 
         safeTransition(() => {
-            if (userId === 'general') {
+            if (patientId === 'general') {
                 switchToGeneralTab();
             } else {
-                const userToSelect = activeTabs.find(tab => tab._id === userId);
-                if (userToSelect) {
-                    setActiveTabId(userId);
-                    setSelectedUser(userToSelect);
+                const patientToSelect = activeTabs.find(tab => {
+                    const tabId = tab.resource?.id;
+                    return tabId === patientId;
+                });
+                if (patientToSelect) {
+                    setActiveTabId(patientId);
+                    setSelectedUser(patientToSelect);
                     setIsUserSelected(true);
-                    navigate(`/user/${userId}`);
+                    navigate(`/user/${patientId}`);
                 }
             }
         });
     }, [activeTabId, activeTabs, navigate, safeTransition, switchToGeneralTab, setSelectedUser, setIsUserSelected]);
+
 
     const handleCloseTab = useCallback((e, userId) => {
         e.stopPropagation();
@@ -91,8 +97,8 @@ export const ChatTabsProvider = ({ children }) => {
         if (!tabToClose) return;
 
         safeTransition(() => {
-            const tabIndex = activeTabs.findIndex(tab => tab._id === tabToClose);
-            const updatedTabs = activeTabs.filter(tab => tab._id !== tabToClose);
+            const tabIndex = activeTabs.findIndex(tab => tab.resource?.id === tabToClose);
+            const updatedTabs = activeTabs.filter(tab => tab.resource?.id !== tabToClose);
 
             localStorage.removeItem(`promptGiven_${tabToClose}`);
             localStorage.removeItem(`sessionStarted_${tabToClose}`);
@@ -107,10 +113,10 @@ export const ChatTabsProvider = ({ children }) => {
                     }
 
                     const nextTab = updatedTabs[nextTabIndex];
-                    setActiveTabId(nextTab._id);
+                    setActiveTabId(nextTab.resource?.id);
                     setSelectedUser(nextTab);
                     setIsUserSelected(true);
-                    navigate(`/user/${nextTab._id}`);
+                    navigate(`/user/${nextTab.resource?.id}`);
                 } else {
                     setActiveTabId('general');
                     setSelectedUser(null);
@@ -130,10 +136,14 @@ export const ChatTabsProvider = ({ children }) => {
         setTabToClose(null);
     }, []);
 
-    const addTab = useCallback((user) => {
-        if (!activeTabs.find(tab => tab._id === user._id)) {
-            setActiveTabs(prev => [...prev, user]);
-            localStorage.setItem(`sessionStarted_${user._id}`, "true");
+    const addTab = useCallback((patient) => {
+        const patientId = patient.resource?.id || patient.id;
+        if (!activeTabs.find(tab => {
+            const tabId = tab.resource?.id || tab.id;
+            return tabId === patientId;
+        })) {
+            setActiveTabs(prev => [...prev, patient]);
+            localStorage.setItem(`sessionStarted_${patientId}`, "true");
         }
     }, [activeTabs]);
 
@@ -147,18 +157,21 @@ export const ChatTabsProvider = ({ children }) => {
 
     useEffect(() => {
         if (isTransitioning) return;
-    
+
         const isUserRoute = location.pathname.startsWith('/user/');
-    
+
         if (isUserRoute) {
             const userId = location.pathname.split('/')[2];
-            const userTab = activeTabs.find(tab => tab._id === userId);
+            const userTab = activeTabs.find(tab => {
+                // Handle both FHIR and non-FHIR patient structures
+                return (tab.resource?.id || tab._id || tab.id) === userId;
+            });
+
             if (userTab) {
                 setActiveTabId(userId);
                 setSelectedUser(userTab);
                 setIsUserSelected(true);
             } else {
-                // Redirect to general if tab doesn't exist
                 switchToGeneralTab();
             }
         } else if (location.pathname === '/') {

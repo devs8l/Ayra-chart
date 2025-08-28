@@ -54,19 +54,15 @@ const MedContextProvider = (props) => {
     const fetchPatients = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('https://medicalchat-backend-mongodb.vercel.app/patients/all');
+        const response = await fetch('https://p01--ayra-backend--5gwtzqz9pfqz.code.run/api/v1/emr/patients');
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
 
         const data = await response.json();
-        const today = new Date();
-        const processedData = data.map(user => ({
-          ...user,
-          appointmentDate: today.toISOString() // or format it as needed
-        }));
-        setUsers(processedData);
+      
+        setUsers(data.entry || []);
         setError(null);
       } catch (err) {
         console.error('Error fetching patient data:', err);
@@ -179,7 +175,7 @@ const MedContextProvider = (props) => {
 
   // If there's a search query, ignore date filtering and return search results
   const filteredUsers = searchQuery
-    ? users.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? users.filter((user) => user?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
     : users.filter((user) => {
       if (!user.appointmentDate) return false;
 
@@ -211,7 +207,7 @@ const MedContextProvider = (props) => {
 
   // Separate search filtered users
   const searchFilteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+    user?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const value = {

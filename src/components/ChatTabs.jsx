@@ -15,7 +15,7 @@ const ChatTabs = memo(() => {
         handleCloseTab
     } = useChatTabs();
 
-    const { isTransitioning: isMedTransitioning,setIsExpanded } = useContext(MedContext);
+    const { isTransitioning: isMedTransitioning, setIsExpanded } = useContext(MedContext);
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -37,26 +37,29 @@ const ChatTabs = memo(() => {
 
     // Update visible tabs when activeTabs changes
     useEffect(() => {
-        // Update visible tabs based on current state and activeTabs
         updateVisibleTabs();
-    }, [activeTabs]); // Run when activeTabs changes
+    }, [activeTabs]);
+
+    // Helper function to get patient ID from FHIR resource
+    const getPatientId = (patient) => {
+        return patient.resource?.id || patient.id; // Fallback to patient.id if resource doesn't exist
+    };
 
     // Helper function to update visible tabs
     const updateVisibleTabs = () => {
-        // If we have a new active tab that isn't in visibleTabIds yet,
-        // make sure it's included (this handles new patients)
-        if (activeTabId !== 'general' && !visibleTabIds.includes(activeTabId) && 
-            activeTabs.some(tab => tab._id === activeTabId)) {
+        const currentActiveId = getPatientId({ id: activeTabId }); // Handle both resource and non-resource cases
+        
+        if (currentActiveId !== 'general' && !visibleTabIds.includes(currentActiveId) && 
+            activeTabs.some(tab => getPatientId(tab) === currentActiveId)) {
+            
             const currentVisible = visibleTabIds.filter(id =>
-                activeTabs.some(tab => tab._id === id)
+                activeTabs.some(tab => getPatientId(tab) === id)
             );
             
-            // Add the active tab at the beginning
-            const newVisibleTabs = [activeTabId];
+            const newVisibleTabs = [currentActiveId];
             
-            // Add other visible tabs (up to 2 more, since we already added the active tab)
             currentVisible.forEach(id => {
-                if (id !== activeTabId && newVisibleTabs.length < 3) {
+                if (id !== currentActiveId && newVisibleTabs.length < 3) {
                     newVisibleTabs.push(id);
                 }
             });
@@ -65,21 +68,17 @@ const ChatTabs = memo(() => {
             return;
         }
         
-        // Standard update flow for existing tabs
-        // Get current visible tabs that still exist in activeTabs
         const currentVisible = visibleTabIds.filter(id =>
-            activeTabs.some(tab => tab._id === id)
+            activeTabs.some(tab => getPatientId(tab) === id)
         );
 
-        // Get tabs that aren't visible yet
         const nonVisibleTabs = activeTabs.filter(tab =>
-            !currentVisible.includes(tab._id)
+            !currentVisible.includes(getPatientId(tab))
         );
 
-        // Fill up to 3 visible tabs
         let newVisibleTabs = [...currentVisible];
         for (let i = 0; i < nonVisibleTabs.length && newVisibleTabs.length < 3; i++) {
-            newVisibleTabs.push(nonVisibleTabs[i]._id);
+            newVisibleTabs.push(getPatientId(nonVisibleTabs[i]));
         }
 
         setVisibleTabIds(newVisibleTabs);
@@ -87,13 +86,10 @@ const ChatTabs = memo(() => {
 
     // Special handling for tab selection from dropdown
     const handleTabSelection = (tabId) => {
-        // Call the original switchToTab function
         switchToTab(tabId);
 
-        // Create a new array with selected tab at first position
         const newVisibleTabs = [tabId];
         
-        // Add other visible tabs (except the selected one)
         visibleTabIds.forEach(id => {
             if (id !== tabId && newVisibleTabs.length < 3) {
                 newVisibleTabs.push(id);
@@ -101,23 +97,19 @@ const ChatTabs = memo(() => {
         });
 
         setVisibleTabIds(newVisibleTabs);
-
-        // Close the dropdown
         setIsDropdownOpen(false);
     };
 
     // Effect to handle when a new tab becomes active
     useEffect(() => {
-        if (activeTabId === 'general') return;
+        const currentActiveId = getPatientId({ id: activeTabId });
+        if (currentActiveId === 'general') return;
         
-        // If the active tab is not in visible tabs
-        if (!visibleTabIds.includes(activeTabId) && 
-            activeTabs.some(tab => tab._id === activeTabId)) {
+        if (!visibleTabIds.includes(currentActiveId) && 
+            activeTabs.some(tab => getPatientId(tab) === currentActiveId)) {
             
-            // Create new visible tabs with the active tab at the beginning
-            const newVisibleTabs = [activeTabId];
+            const newVisibleTabs = [currentActiveId];
             
-            // Add up to 2 more tabs from the current visible tabs
             visibleTabIds.forEach(id => {
                 if (newVisibleTabs.length < 3) {
                     newVisibleTabs.push(id);
@@ -129,52 +121,53 @@ const ChatTabs = memo(() => {
     }, [activeTabId]);
 
     const handleActiveSessionClick = () => {
-        // Toggle dropdown state - this allows closing by clicking again
         setIsDropdownOpen(!isDropdownOpen);
-        setIsExpanded(false)
+        setIsExpanded(false);
     };
 
     const filteredTabs = activeTabs.filter(tab =>
-        tab.name.toLowerCase().includes(searchTerm.toLowerCase())
+        tab.resource?.name?.[0]?.given?.[0]?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Determine which tabs to show in the main row and which to show in dropdown
     const visibleTabs = [];
     const hiddenTabs = [];
 
-    // First, add tabs that should be visible based on visibleTabIds
     visibleTabIds.forEach(tabId => {
-        const tab = activeTabs.find(t => t._id === tabId);
+        const tab = activeTabs.find(t => getPatientId(t) === tabId);
         if (tab) {
             visibleTabs.push(tab);
         }
     });
 
-    // All other tabs go to hidden
     activeTabs.forEach(tab => {
-        if (!visibleTabs.some(t => t._id === tab._id)) {
+        if (!visibleTabs.some(t => getPatientId(t) === getPatientId(tab))) {
             hiddenTabs.push(tab);
         }
     });
 
-    // Common tab class for consistent styling
     const getTabClass = (isActive) => {
-        return `flex items-center  gap-2 mt-1 rounded-sm px-4 py-2 h-full cursor-pointer whitespace-nowrap overflow-hidden w-40 ${
+        return `flex items-center gap-2 mt-1 rounded-sm px-4 py-2 h-full cursor-pointer whitespace-nowrap overflow-hidden w-40 ${
             isActive
                 ? 'bg-white dark:bg-gray-700 mb-3 relative'
-                : 'bg-[#FFFFFF66] dark:bg-gray-600 mb-3 '
+                : 'bg-[#FFFFFF66] dark:bg-gray-600 mb-3'
         }`;
     };
 
-    // Common text class
     const getTextClass = (isActive) => {
         return `truncate text-sm semi ${isActive ? 'text-gray-900 dark:text-white' : 'text-[#22283666] dark:text-gray-400'}`;
+    };
+
+    const getPatientName = (patient) => {
+        if (!patient.resource?.name?.[0]) return 'Unknown';
+        const name = patient.resource.name[0];
+        return `${name.given?.[0] || ''} ${name.family || ''}`.trim();
     };
 
     return (
         <div className="flex items-center justify-between rounded-xl dark:text-white relative">
             <div className="flex-1 overflow-x-auto">
-                <div className="flex gap-2 ">
+                <div className="flex gap-2">
                     {/* General Tab - Always visible */}
                     <div
                         onClick={switchToGeneralTab}
@@ -184,10 +177,7 @@ const ChatTabs = memo(() => {
                             <div className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l-md"></div>
                         )}
                         <div className="w-5 h-5 rounded-full flex items-center justify-center">
-                            <img
-                                src="/home.svg"
-                                alt=""
-                            />
+                            <img src="/home.svg" alt="" />
                         </div>
                         <span className={getTextClass(activeTabId === 'general')}>General</span>
                         {hasHistory('general') && (
@@ -196,51 +186,38 @@ const ChatTabs = memo(() => {
                     </div>
 
                     {/* Visible Tabs - Up to 3 */}
-                    {visibleTabs.map((tab) => (
-                        <div
-                            key={tab._id}
-                            onClick={() => switchToTab(tab._id)}
-                            className={getTabClass(activeTabId === tab._id)}
-                        >
-                            {activeTabId === tab._id && (
-                                <div className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l-md"></div>
-                            )}
-                            {/* <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-                                <User size={17} />
-                            </div> */}
-                            <span className={getTextClass(activeTabId === tab._id)}>
-                                {tab.name}
-                            </span>
-                            <div className="ml-auto flex items-center overflow-hidden">
-                                {hasHistory(tab._id) && (
-                                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                    {visibleTabs.map((tab) => {
+                        const tabId = getPatientId(tab);
+                        return (
+                            <div
+                                key={tabId}
+                                onClick={() => switchToTab(tabId)}
+                                className={getTabClass(activeTabId === tabId)}
+                            >
+                                {activeTabId === tabId && (
+                                    <div className="absolute left-0 top-0 h-full w-1 bg-green-500 rounded-l-md"></div>
                                 )}
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleCloseTab(e, tab._id);
-
-                                        // // Also update visibleTabIds when closing a tab
-                                        // setVisibleTabIds(prev => {
-                                        //     // Remove the closed tab
-                                        //     const newIds = prev.filter(id => id !== tab._id);
-
-                                        //     // If there are hidden tabs, bring one to visible
-                                        //     if (hiddenTabs.length > 0) {
-                                        //         newIds.push(hiddenTabs[0]._id);
-                                        //     }
-
-                                        //     return newIds;
-                                        // });
-                                    }}
-                                    className={`p-1 rounded-full   hover:bg-gray-200 dark:hover:bg-gray-500`}
-                                    disabled={isTransitioning || isMedTransitioning}
-                                >
-                                    <X size={12} className={getTextClass(activeTabId === tab._id)} />
-                                </button>
+                                <span className={getTextClass(activeTabId === tabId)}>
+                                    {getPatientName(tab)}
+                                </span>
+                                <div className="ml-auto flex items-center overflow-hidden">
+                                    {hasHistory(tabId) && (
+                                        <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                                    )}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCloseTab(e, tabId);
+                                        }}
+                                        className={`p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-500`}
+                                        disabled={isTransitioning || isMedTransitioning}
+                                    >
+                                        <X size={12} className={getTextClass(activeTabId === tabId)} />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {/* "All Active Sessions" Button/Tab - Only shown if there are hidden tabs */}
                     {hiddenTabs.length > 0 && (
@@ -253,7 +230,7 @@ const ChatTabs = memo(() => {
                             )}
                             <span className={getTextClass(isDropdownOpen)}>All Active Sessions</span>
                             <div className="ml-auto flex items-center">
-                                {hiddenTabs.some(tab => hasHistory(tab._id)) && (
+                                {hiddenTabs.some(tab => hasHistory(getPatientId(tab))) && (
                                     <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
                                 )}
                                 {isDropdownOpen ? (
@@ -292,36 +269,39 @@ const ChatTabs = memo(() => {
                         <div className="py-1 max-h-60 overflow-y-auto">
                             {/* Hidden Tabs */}
                             {filteredTabs
-                                .filter(tab => hiddenTabs.some(hiddenTab => hiddenTab._id === tab._id))
-                                .map(tab => (
-                                    <div
-                                        key={tab._id}
-                                        onClick={() => handleTabSelection(tab._id)}
-                                        className="flex items-center justify-between px-4 py-3 text-sm cursor-pointer hover:bg-[#ffffff57] dark:hover:bg-gray-600"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <User size={14} />
-                                            <span className="truncate">{tab.name}</span>
+                                .filter(tab => hiddenTabs.some(hiddenTab => getPatientId(hiddenTab) === getPatientId(tab)))
+                                .map(tab => {
+                                    const tabId = getPatientId(tab);
+                                    return (
+                                        <div
+                                            key={tabId}
+                                            onClick={() => handleTabSelection(tabId)}
+                                            className="flex items-center justify-between px-4 py-3 text-sm cursor-pointer hover:bg-[#ffffff57] dark:hover:bg-gray-600"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <User size={14} />
+                                                <span className="truncate">{getPatientName(tab)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {hasHistory(tabId) && (
+                                                    <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                )}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleCloseTab(e, tabId);
+                                                    }}
+                                                    className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-500"
+                                                    disabled={isTransitioning || isMedTransitioning}
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            {hasHistory(tab._id) && (
-                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                            )}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleCloseTab(e, tab._id);
-                                                }}
-                                                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-500"
-                                                disabled={isTransitioning || isMedTransitioning}
-                                            >
-                                                <X size={12} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
 
-                            {filteredTabs.filter(tab => hiddenTabs.some(hiddenTab => hiddenTab._id === tab._id)).length === 0 && (
+                            {filteredTabs.filter(tab => hiddenTabs.some(hiddenTab => getPatientId(hiddenTab) === getPatientId(tab))).length === 0 && (
                                 <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
                                     No tabs found
                                 </div>

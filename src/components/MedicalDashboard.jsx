@@ -12,7 +12,7 @@ const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelecte
   const { selectedUser, isGeneratePreChartClicked, setIsGeneratePreChartClicked } = useContext(MedContext);
 
   const [loading, setLoading] = useState(false);
-  const patientId = selectedUser?._id || '12345';
+  const patientId = selectedUser?.resource?.id || '';
   const pdfRef = useRef();
 
   useEffect(() => {
@@ -20,14 +20,14 @@ const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelecte
       fetchDashboardData();
       console.log("Fetching dashboard data...");
     }
-  }, [dashboardData, isChartSelected, isChartGenerated]);
+  }, [dashboardData, isChartSelected, isChartGenerated,selectedUser]);
 
 
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const data = await getPatientComprehensive('asdad');
+      const data = await getPatientComprehensive(patientId);
       setDashboardData(data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

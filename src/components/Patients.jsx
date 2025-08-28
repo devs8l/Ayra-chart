@@ -13,8 +13,14 @@ const Patients = () => {
         setSelectedUser,
         setIsUserSelected,
         setIsNotesExpanded,
-        setIsPatientRoute
+        setIsPatientRoute,
+        selectedUser,
+        setCurrentPatientId,
+        currentPatient, setCurrentPatient
     } = useContext(MedContext);
+
+    console.log("users", users);
+
 
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
@@ -42,14 +48,17 @@ const Patients = () => {
         contactNumber: "9876543210",
         priority: index % 3 === 0 ? "High" : index % 2 === 0 ? "Medium" : "Low"
     }));
+    
 
     const handleUserClick = (user) => {
+        // setCurrentPatientId(user?.resource?.id);
+        // setCurrentPatient(user);
         setSelectedUser(user);
         setIsUserSelected(true);
         setIsPatientRoute(true);
         setIsPatientExpanded(false);
-        navigate(`/user/${user._id}`);
-    };  
+        navigate(`/user/${user?.resource?.id}`);
+    };
 
     // Filter and sort patients
     useEffect(() => {
@@ -86,7 +95,7 @@ const Patients = () => {
 
     const totalPages = Math.ceil(filteredPatients.length / patientsPerPage);
     const paginatedPatients = filteredPatients.slice(
-        (currentPage - 1) * patientsPerPage, 
+        (currentPage - 1) * patientsPerPage,
         currentPage * patientsPerPage
     );
 
@@ -155,7 +164,7 @@ const Patients = () => {
                         </button>
                     </div>
                     <button
-                        onClick={() => {setIsPatientExpanded(!isPatientExpanded), setIsNotesExpanded(false)}}
+                        onClick={() => { setIsPatientExpanded(!isPatientExpanded), setIsNotesExpanded(false) }}
                         className="text-gray-500 p-2 rounded-full hover:text-gray-900 animate-fadeInLeft"
                     >
                         <img src={imgUrl} className="w-5 h-5" alt="" />
@@ -191,10 +200,10 @@ const Patients = () => {
                                         <th className={`px-6 py-6 text-left ${isPatientExpanded ? 'rounded-lt-lg' : 'border-l rounded-l-lg'} font-medium border-t border-b border-gray-300`}>S.No</th>
                                         <th className="px-6 py-6 text-left font-medium border-t border-b border-gray-300">Patient Name</th>
                                         <th className={`px-6 py-6 text-left font-medium ${isPatientExpanded ? '' : 'border-r rounded-r-lg'} border-t border-b border-gray-300`}>Patient ID</th>
-                                        
+
                                         {isPatientExpanded && activeTab === "Follow-ups" && (
                                             <>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("contactNumber")}
                                                 >
@@ -203,7 +212,7 @@ const Patients = () => {
                                                         {renderSortIndicator("contactNumber")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("priority")}
                                                 >
@@ -217,7 +226,7 @@ const Patients = () => {
 
                                         {isPatientExpanded && (
                                             <>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("dob")}
                                                 >
@@ -226,7 +235,7 @@ const Patients = () => {
                                                         {renderSortIndicator("dob")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("sex")}
                                                 >
@@ -235,7 +244,7 @@ const Patients = () => {
                                                         {renderSortIndicator("sex")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("lastVisited")}
                                                 >
@@ -244,7 +253,7 @@ const Patients = () => {
                                                         {renderSortIndicator("lastVisited")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("nextVisit")}
                                                 >
@@ -253,7 +262,7 @@ const Patients = () => {
                                                         {renderSortIndicator("nextVisit")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("primaryDiagnosis")}
                                                 >
@@ -262,7 +271,7 @@ const Patients = () => {
                                                         {renderSortIndicator("primaryDiagnosis")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300"
                                                     onClick={() => handleSort("primaryPhysician")}
                                                 >
@@ -271,7 +280,7 @@ const Patients = () => {
                                                         {renderSortIndicator("primaryPhysician")}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className={`px-6 py-4 text-left font-medium cursor-pointer border-t border-b border-gray-300 ${isPatientExpanded ? 'rounded-rt-lg' : ''}`}
                                                     onClick={() => handleSort("insuranceStatus")}
                                                 >
@@ -287,43 +296,42 @@ const Patients = () => {
 
                                 {/* Table Body */}
                                 <tbody className="divide-y divide-[#22283633]">
-                                    {paginatedPatients.length > 0 ? (
-                                        paginatedPatients.map((patient) => (
-                                            <tr 
-                                                key={patient.id} 
+                                    {users.length > 0 ? (
+                                        users.map((patient) => (
+                                            <tr
+                                                key={patient?.resource?.id}
                                                 onClick={() => handleUserClick(patient)}
                                                 className="hover:bg-gray-50 cursor-pointer"
                                             >
                                                 <td className="px-6 py-4 text-gray-500 whitespace-nowrap text-sm">
-                                                    {patient.id}
+                                                    1
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
-                                                            <img src={patient.profileImage} alt="" className="w-full h-full object-cover" />
+                                                            {/* <img src={patient.profileImage} alt="" className="w-full h-full object-cover" /> */}
                                                         </div>
-                                                        <span className="truncate">{patient.name}</span>
+                                                        <span className="truncate">{patient?.resource?.name[0]?.given[0]} {patient?.resource?.name[0]?.family}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-gray-500 whitespace-nowrap text-sm">
-                                                    #{patient.patientId?.slice(-6)}
+                                                    #{patient?.resource?.id.slice(-6)}
                                                 </td>
 
                                                 {isPatientExpanded && activeTab === "Follow-ups" && (
                                                     <>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                            {patient.contactNumber}
+                                                            {patient.contactNumber ? patient.contactNumber : "N/A"}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                            <span className={`px-2 py-1 rounded-full text-xs ${
-                                                                patient.priority === "High"
-                                                                    ? "bg-red-100 text-red-800"
-                                                                    : patient.priority === "Medium"
-                                                                        ? "bg-yellow-100 text-yellow-800"
-                                                                        : "bg-green-100 text-green-800"
+                                                            <span className={`px-2 py-1 rounded-full text-xs ${patient.priority === "High"
+                                                                ? "bg-red-100 text-red-800"
+                                                                : patient.priority === "Medium"
+                                                                    ? "bg-yellow-100 text-yellow-800"
+                                                                    : "bg-green-100 text-green-800"
                                                                 }`}
                                                             >
-                                                                {patient.priority}
+                                                                {patient.priority ? patient.priority : "-"}
                                                             </span>
                                                         </td>
                                                     </>
@@ -331,13 +339,13 @@ const Patients = () => {
 
                                                 {isPatientExpanded && (
                                                     <>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.dob}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.sex}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.lastVisited}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.nextVisit}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.primaryDiagnosis}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.primaryPhysician}</td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.insuranceStatus}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient?.resource?.birthDate ? patient?.resource?.birthDate : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.sex ? patient.sex : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.lastVisited ? patient.lastVisited : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.nextVisit ? patient.nextVisit : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.primaryDiagnosis ? patient.primaryDiagnosis : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.primaryPhysician ? patient.primaryPhysician : "-"}</td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm">{patient.insuranceStatus ? patient.insuranceStatus : "-"}</td>
                                                     </>
                                                 )}
                                             </tr>

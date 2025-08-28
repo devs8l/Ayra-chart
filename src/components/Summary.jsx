@@ -18,7 +18,7 @@ const Summary = () => {
 
     const getTitlePlaceholder = () => {
         if (isUserSelected && selectedUser) {
-            return `${selectedUser.name}'s notes`;
+            return `${selectedUser?.resource?.name[0]?.given[0]}'s notes`;
         }
         return "General notes";
     };

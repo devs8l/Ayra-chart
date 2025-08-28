@@ -16,7 +16,7 @@ import FollowUpText from './FollowUpText';
 const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
   const { openDocumentPreview, selectedUser, isNotesExpanded, isSummaryClicked, setIsSummaryClicked, isSummaryBoxActive, isUserSelected, responseConclusion,
     setResponseConclusion, isLoadingFollowUp,
-    setIsLoadingFollowUp, followUpQuestions, isContentExpanded } = useContext(MedContext);
+    setIsLoadingFollowUp, followUpQuestions, isContentExpanded,currentPatient,setCurrentPatient } = useContext(MedContext);
   const {
     messages,
     inputMessage,
@@ -74,7 +74,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
   const generateMessageId = (message, index) => {
     if (message.messageId) return message.messageId; // Use existing ID if present
     if (isGeneralChat) return `general-${index}`;
-    return selectedUser ? `${selectedUser._id}-${index}` : `general-${index}`;
+    return selectedUser ? `${selectedUser.resource.id}-${index}` : `general-${index}`;
   };
 
   // Choose which prompts to display based on patient selection
@@ -135,7 +135,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
     // Clear summary messages for the current user if one is selected
     sendMessage(inputMessage, uploadedFiles, summaryMessages);
     if (selectedUser) {
-      clearSummaryMessages(selectedUser._id);
+      clearSummaryMessages(selectedUser.resource.id);
     }
     setLocalPromptGiven(true);
     setShowSuggestions(false);
@@ -260,6 +260,9 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
 
   const { selectedText, setSelectedText } = useContext(ChatContext);
 
+  console.log("selected",selectedUser);
+  
+
   return (
     <div className="flex flex-col h-full w-full mx-auto shadow-lg transition-opacity duration-200 ease-in-out"
       style={{ opacity: isTransitioning ? 0.7 : 1 }}>
@@ -277,10 +280,11 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
                 <div className={` flex w-full gap-7 ${isUserDetailsExpanded ? 'mb-4' : ''}`}>
                   <div className="">
                     <img
-                      src='/avatar.png'
+                      src={'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}
                       alt="Patient"
-                      className="w-10 h-10 rounded-full object-cover mt-2"
+                      className="w-12 h-12 rounded-full object-cover mt-2"
                     />
+                    
                   </div>
                   <div className={`flex-1 flex flex-col gap-3 border  border-gray-200 rounded-2xl p-4 transition-all duration-300 ease-in-out ${isUserDetailsExpanded ? 'h-auto animate-fadeInDown shadow-xl' : 'overflow-hidden animate-fadeInUp'}`}>
                     <div className="flex flex-col items-start ">
@@ -367,7 +371,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
               <div className={`relative flex flex-col  bg-white border-[0.15rem] shadow-md border-gray-50 overflow-hidden rounded-2xl px-6 py-6 transition-all duration-300 ${showBoxClass ? 'box' : ''} ${isInputFocused ? 'shadow-xl' : 'shadow-xl'}`}>
                 {selectedUser && (
                   <UserSummaryToken
-                    userId={selectedUser._id}
+                    userId={selectedUser.resource.id}
                     summaryMessages={summaryMessages}
                   />
                 )}
@@ -491,7 +495,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
           </div>
         ) : (
           <div className="space-y-2 sm:space-y-3 relative md:space-y-4 lg:space-y-5 xl:space-y-6">
-            {/* {isSummaryClicked === selectedUser?._id && (
+            {/* {isSummaryClicked === selectedUser?.resource.id && (
               <div className={`${isSummaryBoxActive ? 'blur-xs' : ''}`}>
                 <SummaryNoteBox boxwidth={'1/2'} marginTop={'10'} lineclamp={true} handleSuggestionClick={handleSuggestionClick} />
                 <FollowUpSummary handleSuggestionClick={handleSuggestionClick} />
@@ -507,7 +511,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
                     <div className="flex justify-end">
                       <div className="bg-[#c8ddef83] text-gray-700 max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[80%] xl:max-w-[80%] rounded-lg p-1 sm:p-2 md:p-3 lg:p-3 xl:p-3">
                         {selectedUser && <UserSummaryToken
-                          userId={selectedUser._id}
+                          userId={selectedUser.resource.id}
                           summaryMessages={message.tokens}
                           isUser={true}
                         />}
@@ -629,7 +633,7 @@ const ChatInterface = ({ isFullScreen, isGeneralChat, isTransitioning }) => {
             {selectedUser && (
               <>
                 <UserSummaryToken
-                  userId={selectedUser._id}
+                  userId={selectedUser.resource.id}
                   summaryMessages={summaryMessages}
                 />
 
