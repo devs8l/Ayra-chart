@@ -20,7 +20,7 @@ const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelecte
       fetchDashboardData();
       console.log("Fetching dashboard data...");
     }
-  }, [dashboardData, isChartSelected, isChartGenerated,selectedUser]);
+  }, [dashboardData, isChartSelected, isChartGenerated, selectedUser]);
 
 
 
@@ -110,8 +110,8 @@ const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelecte
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {section.content.cards.map((item, index) => (
-              <div key={index} className={`p-4 rounded-t-2xl mb-13 rounded-l-2xl relative ${item.status === 'critical' ? 'bg-[#fef2f2]' : item.status === 'warning' ? 'bg-[#fefce8]' : 'bg-[#43A55F0D]'}`}>
-                <div onClick={() => handleSummaryClick(item, section.sectionTitle)} className={`absolute bottom-[-44px] cursor-pointer p-3 right-0 bg-[#f9fafb] rounded-b-xl`}>
+              <div style={{ backgroundColor: item.bg_color }} key={index} className={`p-4 rounded-t-2xl mb-13 rounded-l-2xl relative`}>
+                <div  onClick={() => handleSummaryClick(item, section.sectionTitle)} className={`absolute bottom-[-44px] cursor-pointer p-3 right-0 bg-[#f9fafb] rounded-b-xl`}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
                     <path d="M6.4 18L5 16.6L14.6 7H6V5H18V17H16V8.4L6.4 18Z" fill="#3472C9" />
                   </svg>
@@ -326,8 +326,16 @@ const MedicalDashboard = ({ isChartSelected, isChartGenerated, setIsChartSelecte
                   <div className="flex items-center space-x-4 mb-6">
                     {section.statusIndicators.map((indicator, idx) => (
                       <div key={idx} className="flex items-center bg-[#f9fafb] rounded-2xl px-2">
-                        <div className={`w-2 h-2 rounded-full mr-2 bg-${indicator.color}-500`}></div>
-                        <span className={`text-sm text-${indicator.color}-500`}>
+                        {/* Dot with direct color */}
+                        <div
+                          className="w-2 h-2 rounded-full mr-2"
+                          style={{ backgroundColor: indicator.color }}
+                        ></div>
+                        {/* Text with direct color */}
+                        <span
+                          className="text-sm"
+                          style={{ color: indicator.color }}
+                        >
                           {indicator.count} {indicator.label}
                         </span>
                       </div>

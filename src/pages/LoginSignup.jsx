@@ -1,12 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MedContext } from '../context/MedContext';
+import OrganizationSignup from '../components/Login/OrganisationSignup';
+import IndividualSignup from '../components/Login/IndividualSignUp';
+import { Circle } from 'lucide-react';
 
 const LoginSignup = () => {
   const navigate = useNavigate();
   const { login } = useContext(MedContext);
 
   const [isLogin, setIsLogin] = useState(true);
+  const [signupType, setSignupType] = useState(null); // 'individual' or 'organization'
   const [step, setStep] = useState(1);
   const [credentials, setCredentials] = useState({
     name: '',
@@ -55,27 +59,61 @@ const LoginSignup = () => {
         setError('Invalid email or password');
       }
     } else {
-      // Signup logic - handle step progression
-      if (step < 5) {
-        setStep(step + 1);
+      // If we're in the pre-signup step (selecting individual/organization)
+      if (!signupType) {
+        return; // Shouldn't happen as the button is disabled until selection
+      }
+
+      // Handle form submission based on signup type
+      if (signupType === 'individual') {
+        // Individual signup logic - handle step progression
+        if (step < 5) {
+          setStep(step + 1);
+        } else {
+          // Final submission for individual
+          setIsLogin(true);
+          setStep(1);
+          setSignupType(null);
+          setCredentials({
+            name: '',
+            email: '',
+            phone: '',
+            npi: '',
+            specialty: '',
+            clinicName: '',
+            pinCode: '',
+            emrEhr: 'None',
+            transcribingTools: 'None',
+            discoveryMethod: '',
+            password: '',
+            confirmPassword: ''
+          });
+        }
       } else {
-        // Final submission
-        setIsLogin(true);
-        setStep(1);
-        setCredentials({
-          name: '',
-          email: '',
-          phone: '',
-          npi: '',
-          specialty: '',
-          clinicName: '',
-          pinCode: '',
-          emrEhr: 'None',
-          transcribingTools: 'None',
-          discoveryMethod: '',
-          password: '',
-          confirmPassword: ''
-        });
+        // Organization signup logic - handle step progression
+        if (step < 5) {
+          setStep(step + 1);
+        } else {
+          // Final submission for organization
+          setIsLogin(true);
+          setStep(1);
+          setSignupType(null);
+          setCredentials({
+            repName: '',
+            designation: '',
+            email: '',
+            phone: '',
+            orgName: '',
+            npi: '',
+            specialties: '',
+            doctorCount: '',
+            address: '',
+            pinCode: '',
+            emrEhr: 'None',
+            transcribingTools: 'None',
+            discoveryMethod: ''
+          });
+        }
       }
     }
   };
@@ -83,6 +121,10 @@ const LoginSignup = () => {
   const goBack = () => {
     if (step > 1) {
       setStep(step - 1);
+    } else if (signupType) {
+      // If we're in a signup form but want to go back to type selection
+      setSignupType(null);
+      setStep(1);
     }
   };
 
@@ -91,18 +133,31 @@ const LoginSignup = () => {
     setTimeout(() => {
       setIsLogin(!isLogin);
       setStep(1);
+      setSignupType(null);
       setError('');
       setIsTransitioning(false);
-    }, 300); // Matches CSS transition duration
+    }, 300);
+  };
+
+  const selectSignupType = (type) => {
+    setSignupType(type);
+    setStep(1); // Reset to first step of the form
   };
 
   const getCompanyName = () => {
     if (isLogin) return 'Propublic Technology Pvt., Ltd.';
-    if (step === 1) return 'Insurance Technologies Pvt. Ltd.';
-    if (step === 2) return 'Inquantic Technologies Pvt., Ltd.';
-    if (step === 3) return 'Inquartic Technologies Pvt. Ltd.';
-    if (step === 4) return 'Inquanto Technologies Pvt. Ltd.';
-    return 'Ayra Technologies Pvt. Ltd.';
+    if (!signupType) return 'Insurance Technologies Pvt. Ltd.';
+    if (signupType === 'individual') {
+      if (step === 1) return 'Inquantic Technologies Pvt., Ltd.';
+      if (step === 2) return 'Inquartic Technologies Pvt. Ltd.';
+      if (step === 3) return 'Inquanto Technologies Pvt. Ltd.';
+      return 'Ayra Technologies Pvt. Ltd.';
+    } else {
+      if (step === 1) return 'Inquantic Technologies Pvt., Ltd.';
+      if (step === 2) return 'Inquartic Technologies Pvt. Ltd.';
+      if (step === 3) return 'Inquanto Technologies Pvt. Ltd.';
+      return 'Ayra Technologies Pvt. Ltd.';
+    }
   };
 
   return (
@@ -116,24 +171,23 @@ const LoginSignup = () => {
         />
       </div>
 
-      {/* Form container - centered with 70% viewport height */}
-      <div className="relative z-10 w-full max-w-lg mx-auto my-auto bg-[#FFFFFFF0] rounded-xl  p-15 min-h-[80vh] flex flex-col">
+      {/* Form container - centered with fixed height and scrollable content */}
+      <div className="relative z-10 w-full max-w-lg mx-auto my-auto bg-[#FFFFFFF0] rounded-xl p-8 min-h-[85vh] max-h-[85vh] flex flex-col">
         {/* Logo container with transition */}
-        <div className={`${isLogin ? 'flex  flex-col justify-center items-center ' : 'absolute top-8 left-8 '} `}>
+        <div className={`${isLogin ? 'flex flex-col justify-center items-center' : 'absolute top-8 left-8'}`}>
           <img
             src="/Ayra.svg"
             alt="Ayra Logo"
             className={`transition-all duration-300 ${isLogin ? 'w-40' : 'w-24'}`}
           />
           {/* Version info */}
-          <div className={`text-center text-[10px] text-gray-500 ${isLogin ? 'mb-8' : ' mb-6 ml-10'}`}>
+          <div className={`text-center text-[10px] text-gray-500 ${isLogin ? 'mb-8' : 'mb-6 ml-10'}`}>
             v1.10 | 2025
           </div>
         </div>
 
-
-        {/* Progress bar for signup */}
-        {!isLogin && step <= 4 && (
+        {/* Progress bar for both individual and organization signup */}
+        {!isLogin && signupType && step <= 4 && (
           <div className="flex mb-6">
             {[1, 2, 3, 4].map((i) => (
               <div
@@ -144,11 +198,11 @@ const LoginSignup = () => {
           </div>
         )}
 
-        {/* Main form content - centered for login, scrollable for signup */}
-        <div className={`flex-grow ${step === 5 ? 'flex items-center justify-center':''}  ${isLogin ? 'flex flex-col justify-center' : 'overflow-y-auto '}`}>
+        {/* Main form content - scrollable container */}
+        <div className={`flex-grow overflow-y-auto ${!isLogin && signupType && step === 5 ? 'flex items-center justify-center' : ''} ${isLogin || !signupType ? 'flex flex-col justify-center' : ''}`}>
           {isLogin ? (
-            // Login Form - centered vertically
-            <form onSubmit={handleSubmit} className="space-y-8">
+            // Login Form
+            <form onSubmit={handleSubmit} className="space-y-8 p-10">
               <div>
                 <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
                 <input
@@ -195,167 +249,63 @@ const LoginSignup = () => {
                 </button>
               </div>
             </form>
+          ) : !signupType ? (
+            // Pre-signup: Select individual or organization
+            <div className="space-y-18">
+              <h2 className="text-[#222836]  font-inter text-center text-[20px] font-semibold leading-[24px] tracking-[-0.48px]">
+                What are you signing up as?
+              </h2>
+
+              <div className="flex gap-6 justify-center">
+                <button
+                  onClick={() => selectSignupType('individual')}
+                  className="p-2 flex flex-col items-center"
+                >
+                  <div className="w-40 h-40 flex items-center justify-center">
+                    <img
+                      src="/ind.svg"
+                      alt="Individual"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="font-medium text-sm mt-8 whitespace-nowrap flex items-center gap-3">
+                    Individual Practitioner
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => selectSignupType('organization')}
+                  className="p-2 flex flex-col items-center"
+                >
+                  <div className="w-40 h-40 flex items-center justify-center">
+                    <img
+                      src="/org.svg"
+                      alt="Organization"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="font-medium text-sm mt-8 whitespace-nowrap flex items-center gap-3">
+                    Organization
+                  </div>
+                </button>
+              </div>
+            </div>
+          ) : signupType === 'individual' ? (
+            // Individual signup form
+            <IndividualSignup
+              step={step}
+              credentials={credentials}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+            />
           ) : (
-            // Signup Form - scrollable with increased gaps
-            <form onSubmit={handleSubmit} className="space-y-8 pb-4">
-              {step === 1 && (
-                <>
-                  <h2 className="text-xl font-semibold mb-8">Personal Details</h2>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Your Name</div>
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Type your name"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.name}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Email</div>
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Enter your Email ID"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.email}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Phone Number</div>
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="+91"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </>
-              )}
-
-              {step === 2 && (
-                <>
-                  <h2 className="text-xl font-semibold mb-8">Professional Details</h2>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">National Provider Identifier (NPI)</div>
-                    <input
-                      type="text"
-                      name="npi"
-                      placeholder="XXXXX XXXXX"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.npi}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Specialty</div>
-                    <input
-                      type="text"
-                      name="specialty"
-                      placeholder="Select your specialty"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.specialty}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Clinic/Hospital Name</div>
-                    <input
-                      type="text"
-                      name="clinicName"
-                      placeholder="Type your hospital's name"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.clinicName}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">PIN Code</div>
-                    <input
-                      type="text"
-                      name="pinCode"
-                      placeholder="Enter your PIN code"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.pinCode}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </>
-              )}
-
-              {step === 3 && (
-                <>
-                  <h2 className="text-xl font-semibold mb-8">Software/IT Details</h2>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">Any existing EMR/EHR</div>
-                    <select
-                      name="emrEhr"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.emrEhr}
-                      onChange={handleChange}
-                    >
-                      <option value="None">None</option>
-                      <option value="Epic">Epic</option>
-                      <option value="Cerner">Cerner</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div className="mt-8">
-                    <div className="text-xs text-gray-500 mb-3">Any existing Transcribing Tools</div>
-                    <select
-                      name="transcribingTools"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.transcribingTools}
-                      onChange={handleChange}
-                    >
-                      <option value="None">None</option>
-                      <option value="Dragon">Dragon</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {step === 4 && (
-                <>
-                  <h2 className="text-xl font-semibold mb-8">About Ayra</h2>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-3">How did you find Ayra AI?</div>
-                    <select
-                      name="discoveryMethod"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                      value={credentials.discoveryMethod}
-                      onChange={handleChange}
-                    >
-                      <option value="">Select an option</option>
-                      <option value="Colleague">Colleague</option>
-                      <option value="Conference">Conference</option>
-                      <option value="Online">Online</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {step === 5 && (
-                <div className=''>
-                  <h2 className="text-xl font-semibold mb-8 text-center">Request Sent Successfully!</h2>
-                  <div className="text-center">
-                    <p className="mb-8">Team Ayra will get back to you shortly on your provided contact details.</p>
-                  </div>
-                </div>
-              )}
-            </form>
+            // Organization signup form
+            <OrganizationSignup
+              step={step}
+              credentials={credentials}
+              handleChange={handleChange}
+              handleSubmit={handleSubmit}
+            />
           )}
         </div>
 
@@ -363,7 +313,7 @@ const LoginSignup = () => {
         <div className="mt-auto pt-4">
           {isLogin ? null : (
             <div className="flex justify-between">
-              {step === 1 ? (
+              {!signupType ? (
                 <button
                   type="button"
                   onClick={toggleForm}
@@ -371,10 +321,18 @@ const LoginSignup = () => {
                 >
                   Already have an account? Login
                 </button>
-              ) : step > 1 && step < 5 ? (
+              ) : (signupType === 'individual' || signupType === 'organization') && step > 1 && step < 5 ? (
                 <button
                   type="button"
                   onClick={goBack}
+                  className="px-6 py-2 text-gray-600 bg-gray-300 rounded-md hover:bg-gray-400"
+                >
+                  Back
+                </button>
+              ) : signupType && step === 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setSignupType(null)}
                   className="px-6 py-2 text-gray-600 bg-gray-300 rounded-md hover:bg-gray-400"
                 >
                   Back
@@ -383,20 +341,22 @@ const LoginSignup = () => {
                 <div></div> // Empty div for spacing
               )}
 
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${step === 5 ? 'w-full' : ''}`}
-              >
-                {step < 4 ? 'Next' : step === 4 ? 'Submit Request' : 'Done'}
-              </button>
+              {signupType && (
+                <button
+                  type="submit"
+                  onClick={handleSubmit}
+                  className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${step === 5 ? 'w-full' : ''}`}
+                >
+                  {step < 4 ? 'Next' : step === 4 ? 'Submit Request' : 'Done'}
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {/* Footer outside the white box */}
-      <div className=" text-center text-xs text-gray-300">
+      <div className="text-center text-xs text-gray-300">
         ©2025. Ayra is a product of Inquantic Technologies Pvt. Ltd. All Rights Reserved
       </div>
     </div>
