@@ -4,6 +4,7 @@ import { MedContext } from '../context/MedContext';
 import OrganizationSignup from '../components/Login/OrganisationSignup';
 import IndividualSignup from '../components/Login/IndividualSignUp';
 import { Circle } from 'lucide-react';
+import { tenantSignup } from '../Services/auth';
 
 const LoginSignup = () => {
   const navigate = useNavigate();
@@ -12,7 +13,16 @@ const LoginSignup = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [signupType, setSignupType] = useState(null); // 'individual' or 'organization'
   const [step, setStep] = useState(1);
-  const [credentials, setCredentials] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestStatus, setRequestStatus] = useState(null); // 'success', 'error', or null
+
+  // Separate states for different forms
+  const [loginCredentials, setLoginCredentials] = useState({
+    email: '',
+    password: ''
+  });
+
+  const [individualCredentials, setIndividualCredentials] = useState({
     name: '',
     email: '',
     phone: '',
@@ -26,6 +36,24 @@ const LoginSignup = () => {
     password: '',
     confirmPassword: ''
   });
+
+  const [organizationCredentials, setOrganizationCredentials] = useState({
+    repName: '',
+    designation: '',
+    email: '',
+    phone: '',
+    orgName: '',
+    npi: '',
+    domain: '',
+    specialties: '',
+    doctorCount: '',
+    address: '',
+    pinCode: '',
+    emrEhr: 'None',
+    transcribingTools: 'None',
+    discoveryMethod: ''
+  });
+
   const [error, setError] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -35,85 +63,126 @@ const LoginSignup = () => {
     password: 'meddemo123@'
   };
 
-  const handleChange = (e) => {
+  const handleLoginChange = (e) => {
     const { name, value } = e.target;
-    setCredentials(prev => ({
+    setLoginCredentials(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleIndividualChange = (e) => {
+    const { name, value } = e.target;
+    setIndividualCredentials(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleOrganizationChange = (e) => {
+    const { name, value } = e.target;
+    setOrganizationCredentials(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleLoginSubmit = (e) => {
     e.preventDefault();
     setError('');
 
-    if (isLogin) {
-      // Login logic
-      if (
-        credentials.email === tempCredentials.email &&
-        credentials.password === tempCredentials.password
-      ) {
-        login();
-        navigate('/');
-      } else {
-        setError('Invalid email or password');
-      }
+    if (
+      loginCredentials.email === tempCredentials.email &&
+      loginCredentials.password === tempCredentials.password
+    ) {
+      login();
+      navigate('/');
     } else {
-      // If we're in the pre-signup step (selecting individual/organization)
-      if (!signupType) {
-        return; // Shouldn't happen as the button is disabled until selection
-      }
+      setError('Invalid email or password');
+    }
+  };
 
-      // Handle form submission based on signup type
-      if (signupType === 'individual') {
-        // Individual signup logic - handle step progression
-        if (step < 5) {
-          setStep(step + 1);
+  // Mock API call function
+  const submitSignupRequest = async (data, type) => {
+    // Simulate API call with delay
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        // Simulate random success/failure (80% success rate for demo)
+        const isSuccess = Math.random() > 0.2;
+        if (isSuccess) {
+          resolve({ success: true, message: 'Request submitted successfully' });
         } else {
-          // Final submission for individual
-          setIsLogin(true);
-          setStep(1);
-          setSignupType(null);
-          setCredentials({
-            name: '',
-            email: '',
-            phone: '',
-            npi: '',
-            specialty: '',
-            clinicName: '',
-            pinCode: '',
-            emrEhr: 'None',
-            transcribingTools: 'None',
-            discoveryMethod: '',
-            password: '',
-            confirmPassword: ''
-          });
+          reject({ success: false, message: 'Request failed. Please try again later.' });
         }
-      } else {
-        // Organization signup logic - handle step progression
-        if (step < 5) {
-          setStep(step + 1);
+      }, 1500);
+    });
+  };
+
+  const handleIndividualSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Handle form progression for steps 1-4
+    if (step < 4) {
+      setStep(step + 1);
+      return;
+    }
+
+    // For the final step (step 4), submit the request
+    if (step === 4) {
+      setIsSubmitting(true);
+      setRequestStatus(null);
+
+      try {
+        const result = await submitSignupRequest(individualCredentials, 'individual');
+
+        if (result.success) {
+          setRequestStatus('success');
+          setStep(5); // Show success message
         } else {
-          // Final submission for organization
-          setIsLogin(true);
-          setStep(1);
-          setSignupType(null);
-          setCredentials({
-            repName: '',
-            designation: '',
-            email: '',
-            phone: '',
-            orgName: '',
-            npi: '',
-            specialties: '',
-            doctorCount: '',
-            address: '',
-            pinCode: '',
-            emrEhr: 'None',
-            transcribingTools: 'None',
-            discoveryMethod: ''
-          });
+          setRequestStatus('error');
+          setError(result.message);
         }
+      } catch (err) {
+        setRequestStatus('error');
+        setError(err.message || 'Request failed. Please try again after sometime.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleOrganizationSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    // Handle form progression for step 1
+    if (step < 2) {
+      setStep(step + 1);
+      return;
+    }
+
+    // For the final step (step 2), submit the request
+    if (step === 2) {
+      setIsSubmitting(true);
+      setRequestStatus(null);
+
+      try {
+        const result = await tenantSignup(organizationCredentials);
+
+        if (result.success) {
+          setRequestStatus('success');
+          console.log('Signup successful:', result.data);
+          setStep(3); // Show success message
+        } else {
+          setRequestStatus('error');
+          setError(result.message || 'Request failed. Please try again after sometime.');
+        }
+      } catch (err) {
+        setRequestStatus('error');
+        setError(err.message || 'Request failed. Please try again after sometime.');
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -121,10 +190,14 @@ const LoginSignup = () => {
   const goBack = () => {
     if (step > 1) {
       setStep(step - 1);
+      setError('');
+      setRequestStatus(null);
     } else if (signupType) {
       // If we're in a signup form but want to go back to type selection
       setSignupType(null);
       setStep(1);
+      setError('');
+      setRequestStatus(null);
     }
   };
 
@@ -135,6 +208,7 @@ const LoginSignup = () => {
       setStep(1);
       setSignupType(null);
       setError('');
+      setRequestStatus(null);
       setIsTransitioning(false);
     }, 300);
   };
@@ -142,22 +216,46 @@ const LoginSignup = () => {
   const selectSignupType = (type) => {
     setSignupType(type);
     setStep(1); // Reset to first step of the form
+    setError('');
+    setRequestStatus(null);
   };
 
-  const getCompanyName = () => {
-    if (isLogin) return 'Propublic Technology Pvt., Ltd.';
-    if (!signupType) return 'Insurance Technologies Pvt. Ltd.';
-    if (signupType === 'individual') {
-      if (step === 1) return 'Inquantic Technologies Pvt., Ltd.';
-      if (step === 2) return 'Inquartic Technologies Pvt. Ltd.';
-      if (step === 3) return 'Inquanto Technologies Pvt. Ltd.';
-      return 'Ayra Technologies Pvt. Ltd.';
-    } else {
-      if (step === 1) return 'Inquantic Technologies Pvt., Ltd.';
-      if (step === 2) return 'Inquartic Technologies Pvt. Ltd.';
-      if (step === 3) return 'Inquanto Technologies Pvt. Ltd.';
-      return 'Ayra Technologies Pvt. Ltd.';
-    }
+  const resetForm = () => {
+    setIsLogin(true);
+    setStep(1);
+    setSignupType(null);
+    setError('');
+    setRequestStatus(null);
+    setIndividualCredentials({
+      name: '',
+      email: '',
+      phone: '',
+      npi: '',
+      specialty: '',
+      clinicName: '',
+      pinCode: '',
+      emrEhr: 'None',
+      transcribingTools: 'None',
+      discoveryMethod: '',
+      password: '',
+      confirmPassword: ''
+    });
+    setOrganizationCredentials({
+      repName: '',
+      designation: '',
+      email: '',
+      phone: '',
+      orgName: '',
+      npi: '',
+      domain: '',
+      specialties: '',
+      doctorCount: '',
+      address: '',
+      pinCode: '',
+      emrEhr: 'None',
+      transcribingTools: 'None',
+      discoveryMethod: ''
+    });
   };
 
   return (
@@ -186,23 +284,22 @@ const LoginSignup = () => {
           </div>
         </div>
 
-        {/* Progress bar for both individual and organization signup */}
-        {!isLogin && signupType && step <= 4 && (
+        {!isLogin && signupType && step <= (signupType === 'individual' ? 4 : 2) && (
           <div className="flex mb-6">
-            {[1, 2, 3, 4].map((i) => (
+            {[...Array(signupType === 'individual' ? 4 : 2)].map((_, i) => (
               <div
-                key={i}
-                className={`h-1 flex-1 mx-1 mt-15 rounded-full ${i <= step ? 'bg-[#80B5FF]' : 'bg-gray-300'}`}
+                key={i + 1}
+                className={`h-1 flex-1 mx-1 mt-15 rounded-full ${i + 1 <= step ? 'bg-[#80B5FF]' : 'bg-gray-300'}`}
               />
             ))}
           </div>
         )}
 
         {/* Main form content - scrollable container */}
-        <div className={`flex-grow overflow-y-auto ${!isLogin && signupType && step === 5 ? 'flex items-center justify-center' : ''} ${isLogin || !signupType ? 'flex flex-col justify-center' : ''}`}>
+        <div className={`flex-grow overflow-y-auto ${!isLogin && signupType && step === (signupType === 'individual' ? 5 : 3) ? 'flex items-center justify-center' : ''} ${isLogin || !signupType ? 'flex flex-col justify-center' : ''}`}>
           {isLogin ? (
             // Login Form
-            <form onSubmit={handleSubmit} className="space-y-8 p-10">
+            <form onSubmit={handleLoginSubmit} className="space-y-8 p-10">
               <div>
                 <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
                 <input
@@ -210,8 +307,8 @@ const LoginSignup = () => {
                   name="email"
                   placeholder="Enter Email ID"
                   className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                  value={credentials.email}
-                  onChange={handleChange}
+                  value={loginCredentials.email}
+                  onChange={handleLoginChange}
                 />
               </div>
 
@@ -222,8 +319,8 @@ const LoginSignup = () => {
                   name="password"
                   placeholder="Enter Password"
                   className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                  value={credentials.password}
-                  onChange={handleChange}
+                  value={loginCredentials.password}
+                  onChange={handleLoginChange}
                 />
               </div>
 
@@ -243,7 +340,7 @@ const LoginSignup = () => {
                 <button
                   type="button"
                   onClick={toggleForm}
-                  className="text-blue-600 hover:underline"
+                  className="text-blue-600 cursor-pointer hover:underline"
                 >
                   Sign-up
                 </button>
@@ -259,7 +356,7 @@ const LoginSignup = () => {
               <div className="flex gap-6 justify-center">
                 <button
                   onClick={() => selectSignupType('individual')}
-                  className="p-2 flex flex-col items-center"
+                  className="p-2 flex flex-col cursor-pointer items-center"
                 >
                   <div className="w-40 h-40 flex items-center justify-center">
                     <img
@@ -275,7 +372,7 @@ const LoginSignup = () => {
 
                 <button
                   onClick={() => selectSignupType('organization')}
-                  className="p-2 flex flex-col items-center"
+                  className="p-2 flex flex-col cursor-pointer items-center"
                 >
                   <div className="w-40 h-40 flex items-center justify-center">
                     <img
@@ -294,17 +391,23 @@ const LoginSignup = () => {
             // Individual signup form
             <IndividualSignup
               step={step}
-              credentials={credentials}
-              handleChange={handleChange}
-              handleSubmit={handleSubmit}
+              credentials={individualCredentials}
+              handleChange={handleIndividualChange}
+              handleSubmit={handleIndividualSubmit}
+              isSubmitting={isSubmitting}
+              requestStatus={requestStatus}
+              error={error}
             />
           ) : (
             // Organization signup form
             <OrganizationSignup
               step={step}
-              credentials={credentials}
-              handleChange={handleChange}
-              handleSubmit={handleSubmit}
+              credentials={organizationCredentials}
+              handleChange={handleOrganizationChange}
+              handleSubmit={handleOrganizationSubmit}
+              isSubmitting={isSubmitting}
+              requestStatus={requestStatus}
+              error={error}
             />
           )}
         </div>
@@ -321,11 +424,13 @@ const LoginSignup = () => {
                 >
                   Already have an account? Login
                 </button>
-              ) : (signupType === 'individual' || signupType === 'organization') && step > 1 && step < 5 ? (
+              ) : (signupType === 'individual' || signupType === 'organization') &&
+                step > 1 &&
+                step < (signupType === 'individual' ? 5 : 3) ? (
                 <button
                   type="button"
                   onClick={goBack}
-                  className="px-6 py-2 text-gray-600 bg-gray-300 rounded-md hover:bg-gray-400"
+                  className="px-6 py-2 text-gray-600 cursor-pointer bg-gray-300 rounded-md hover:bg-gray-400"
                 >
                   Back
                 </button>
@@ -333,21 +438,40 @@ const LoginSignup = () => {
                 <button
                   type="button"
                   onClick={() => setSignupType(null)}
-                  className="px-6 py-2 text-gray-600 bg-gray-300 rounded-md hover:bg-gray-400"
+                  className="px-6 py-2 text-gray-600 cursor-pointer  bg-gray-300 rounded-md hover:bg-gray-400"
                 >
                   Back
+                </button>
+              ) : signupType && step === (signupType === 'individual' ? 5 : 3) ? (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-6 py-2 w-full cursor-pointer  bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Back to Login
                 </button>
               ) : (
                 <div></div> // Empty div for spacing
               )}
 
-              {signupType && (
+              {signupType && step < (signupType === 'individual' ? 4 : 2) && (
                 <button
                   type="submit"
-                  onClick={handleSubmit}
-                  className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${step === 5 ? 'w-full' : ''}`}
+                  onClick={signupType === 'individual' ? handleIndividualSubmit : handleOrganizationSubmit}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
-                  {step < 4 ? 'Next' : step === 4 ? 'Submit Request' : 'Done'}
+                  Next
+                </button>
+              )}
+
+              {signupType && step === (signupType === 'individual' ? 4 : 2) && (
+                <button
+                  type="submit"
+                  onClick={signupType === 'individual' ? handleIndividualSubmit : handleOrganizationSubmit}
+                  disabled={isSubmitting}
+                  className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Request'}
                 </button>
               )}
             </div>

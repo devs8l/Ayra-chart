@@ -6,64 +6,6 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
     <form onSubmit={handleSubmit} className="space-y-8 pb-4">
       {step === 1 && (
         <>
-          <h2 className="text-xl font-semibold mb-8">Personal Details</h2>
-          <div>
-            <div className="text-xs text-gray-500 mb-3">Representative Name</div>
-            <input
-              type="text"
-              name="repName"
-              placeholder="Type your name"
-              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.repName || ''}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div>
-            <div className="text-xs text-gray-500 mb-3">Designation</div>
-            <select
-              name="designation"
-              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.designation || ''}
-              onChange={handleChange}
-            >
-              <option value="">Select your designation</option>
-              <option value="Admin">Admin</option>
-              <option value="Doctor">Doctor</option>
-              <option value="Manager">Manager</option>
-              <option value="Owner">Owner</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <div className="text-xs text-gray-500 mb-3">Email</div>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your Email ID"
-              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.email}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div>
-            <div className="text-xs text-gray-500 mb-3">Phone Number</div>
-            <input
-              type="tel"
-              name="phone"
-              placeholder="+91"
-              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.phone}
-              onChange={handleChange}
-            />
-          </div>
-        </>
-      )}
-
-      {step === 2 && (
-        <>
           <h2 className="text-xl font-semibold mb-8">Organizational Details</h2>
           <div>
             <div className="text-xs text-gray-500 mb-3">Clinic/Hospital Name</div>
@@ -74,6 +16,7 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
               className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
               value={credentials.orgName || ''}
               onChange={handleChange}
+              required
             />
           </div>
 
@@ -86,6 +29,18 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
               className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
               value={credentials.npi || ''}
               onChange={handleChange}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-3">Organization Domain</div>
+            <input
+              type="text"
+              name="domain"
+              placeholder="Enter your organization's domain"
+              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+              value={credentials.domain || ''}
+              onChange={handleChange}
+              required
             />
           </div>
 
@@ -158,7 +113,7 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
         </>
       )}
 
-      {step === 3 && (
+      {step === 2 && (
         <>
           <h2 className="text-xl font-semibold mb-8">Software/IT Details</h2>
           <div>
@@ -196,30 +151,7 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
         </>
       )}
 
-      {step === 4 && (
-        <>
-          <h2 className="text-xl font-semibold mb-8">About Ayra</h2>
-          <div>
-            <div className="text-xs text-gray-500 mb-3">How did you find Ayra AI?</div>
-            <select
-              name="discoveryMethod"
-              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.discoveryMethod || ''}
-              onChange={handleChange}
-            >
-              <option value="">Select an option</option>
-              <option value="Colleague">Colleague</option>
-              <option value="Conference">Conference</option>
-              <option value="Online">Online</option>
-              <option value="Referral">Referral</option>
-              <option value="Sales Representative">Sales Representative</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </>
-      )}
-
-      {step === 5 && (
+      {step === 3 && (
         <div className=''>
           <h2 className="text-xl font-semibold mb-8 text-center">Request Sent Successfully!</h2>
           <div className="text-center">
@@ -227,6 +159,8 @@ const OrganizationSignup = ({ step, credentials, handleChange, handleSubmit }) =
           </div>
         </div>
       )}
+
+
     </form>
   );
 };
