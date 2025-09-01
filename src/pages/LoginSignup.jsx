@@ -1,8 +1,8 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MedContext } from '../context/MedContext';
-import OrganizationSignup from '../components/Login/OrganisationSignup';
-import IndividualSignup from '../components/Login/IndividualSignUp';
+import OrganizationSignup from '../components/Login/Organisation';
+import IndividualSignup from '../components/Login/Individual';
 import { Circle } from 'lucide-react';
 import { tenantSignup } from '../Services/auth';
 
