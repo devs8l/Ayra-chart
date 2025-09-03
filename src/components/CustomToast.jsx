@@ -43,10 +43,10 @@ export const showWelcomeToast = (userName) => {
   toast.custom((t) => (
     <div
       className={`${t.visible ? 'animate-enter' : 'animate-leave'
-        } max-w-md w-full bg-blue-50 border border-blue-200 shadow-lg rounded-lg pointer-events-auto flex`}
+        } max-w-md w-full bg-blue-50 border border-blue-200 shadow-2xl rounded-lg pointer-events-auto flex`}
     >
       <div className="flex-1 w-0 p-4">
-        <div className="flex items-start">
+        <div className="flex items-center">
           <div className="flex-shrink-0 pt-0.5">
             <img
               className="h-10 w-10 rounded-full"

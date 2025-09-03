@@ -19,12 +19,17 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout, login, isExpanded } = useContext(MedContext);
-  const hasShownWelcome = useRef(false); // To prevent showing toast multiple times
+  
+  // Check if welcome toast has been shown before using localStorage
+  const hasShownWelcome = useRef(
+    localStorage.getItem('hasShownWelcome') === 'true'
+  );
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
-      hasShownWelcome.current = false; // Reset when logged out
+      // Reset welcome toast when logged out
+      localStorage.removeItem('hasShownWelcome');
     }
   }, [isAuthenticated, navigate]);
 
@@ -35,6 +40,8 @@ const App = () => {
       const timer = setTimeout(() => {
         showWelcomeToast('Doctor');
         hasShownWelcome.current = true;
+        // Persist in localStorage
+        localStorage.setItem('hasShownWelcome', 'true');
       }, 500);
       
       return () => clearTimeout(timer);
