@@ -30,6 +30,17 @@ const IndividualSignup = ({ step, credentials, handleChange, handleSubmit }) => 
               onChange={handleChange}
             />
           </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-3">Password</div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your Password"
+              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+              value={credentials.password}
+              onChange={handleChange}
+            />
+          </div>
 
           <div>
             <div className="text-xs text-gray-500 mb-3">Phone Number</div>
@@ -76,10 +87,32 @@ const IndividualSignup = ({ step, credentials, handleChange, handleSubmit }) => 
             <div className="text-xs text-gray-500 mb-3">Clinic/Hospital Name</div>
             <input
               type="text"
-              name="clinicName"
-              placeholder="Type your hospital's name"
+              name="orgName"
+              placeholder="Type your organization's name"
               className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-              value={credentials.clinicName}
+              value={credentials.orgName}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-3">Hospital Domain</div>
+            <input
+              type="text"
+              name="domain"
+              placeholder="Type your hospital's domain"
+              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+              value={credentials.domain}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 mb-3">Hospital Address</div>
+            <input
+              type="text"
+              name="address"
+              placeholder="Type your hospital's address"
+              className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+              value={credentials.address}
               onChange={handleChange}
             />
           </div>

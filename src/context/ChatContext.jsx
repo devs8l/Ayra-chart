@@ -123,6 +123,8 @@ const ChatContextProvider = (props) => {
       questions,
       timestamp: new Date().toISOString()
     };
+    console.log(summaryContent,"summmmmmmm");
+    
     setSummaryMessages(prev => {
       const existingSummaries = prev[userId] || [];
       return {

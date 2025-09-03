@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { MedContext } from '../context/MedContext';
 import OrganizationSignup from '../components/Login/Organisation';
 import IndividualSignup from '../components/Login/Individual';
-import { Circle } from 'lucide-react';
-import { tenantSignup } from '../Services/auth';
+import { Circle, Eye, EyeClosed } from 'lucide-react';
+import { tenantSignup, userLogin, userSignup } from '../Services/auth';
 
 const LoginSignup = () => {
   const navigate = useNavigate();
@@ -18,6 +18,7 @@ const LoginSignup = () => {
 
   // Separate states for different forms
   const [loginCredentials, setLoginCredentials] = useState({
+    tenantId: '',
     email: '',
     password: ''
   });
@@ -28,8 +29,10 @@ const LoginSignup = () => {
     phone: '',
     npi: '',
     specialty: '',
-    clinicName: '',
+    orgName: '',
     pinCode: '',
+    domain: '',
+    address: '',
     emrEhr: 'None',
     transcribingTools: 'None',
     discoveryMethod: '',
@@ -53,6 +56,8 @@ const LoginSignup = () => {
     transcribingTools: 'None',
     discoveryMethod: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [error, setError] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -87,18 +92,24 @@ const LoginSignup = () => {
     }));
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
 
-    if (
-      loginCredentials.email === tempCredentials.email &&
-      loginCredentials.password === tempCredentials.password
-    ) {
-      login();
-      navigate('/');
-    } else {
-      setError('Invalid email or password');
+    try {
+      const result = await userLogin(loginCredentials);
+
+      if (result.success) {
+        login();
+        navigate('/');
+      } else {
+        setError(result.message || 'Invalid credentials');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -134,11 +145,12 @@ const LoginSignup = () => {
       setRequestStatus(null);
 
       try {
-        const result = await submitSignupRequest(individualCredentials, 'individual');
+        const result = await userSignup(individualCredentials);
 
         if (result.success) {
           setRequestStatus('success');
-          setStep(5); // Show success message
+          login(); // Log the user in
+          navigate('/'); // Navigate to home page
         } else {
           setRequestStatus('error');
           setError(result.message);
@@ -232,8 +244,10 @@ const LoginSignup = () => {
       phone: '',
       npi: '',
       specialty: '',
-      clinicName: '',
+      orgName: '',
       pinCode: '',
+      domain: '',
+      address: '',
       emrEhr: 'None',
       transcribingTools: 'None',
       discoveryMethod: '',
@@ -301,52 +315,73 @@ const LoginSignup = () => {
             // Login Form
             <form onSubmit={handleLoginSubmit} className="space-y-8 p-10">
               <div>
-                <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter Email ID"
-                  className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                  value={loginCredentials.email}
-                  onChange={handleLoginChange}
-                />
+              <div className="text-xs text-gray-500 mb-3">Tenant ID</div>
+              <input
+                type="text"
+                name="tenantId"
+                placeholder="Enter Tenant ID"
+                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                value={loginCredentials.tenantId}
+                onChange={handleLoginChange}
+              />
+              </div>
+              <div>
+              <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter Email ID"
+                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                value={loginCredentials.email}
+                onChange={handleLoginChange}
+              />
               </div>
 
               <div>
-                <div className="text-xs text-gray-500 mb-3">Password</div>
+              <div className="text-xs text-gray-500 mb-3">Password</div>
+              <div className="relative">
                 <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter Password"
-                  className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                  value={loginCredentials.password}
-                  onChange={handleLoginChange}
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter Password"
+                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                value={loginCredentials.password}
+                onChange={handleLoginChange}
                 />
+                <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute cursor-pointer right-2 top-1/2 transform -translate-y-1/2"
+                >
+                {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
+                </button>
+              </div>
               </div>
 
               {error && (
-                <div className="text-red-500 text-sm mt-2">{error}</div>
+              <div className="text-red-500 text-sm mt-2">{error}</div>
               )}
 
               <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors mt-8"
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Login
+              {isSubmitting ? 'Logging in...' : 'Login'}
               </button>
 
               <div className="text-center text-sm pt-6">
-                Don't have an account?{' '}
-                <button
-                  type="button"
-                  onClick={toggleForm}
-                  className="text-blue-600 cursor-pointer hover:underline"
-                >
-                  Sign-up
-                </button>
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={toggleForm}
+                className="text-blue-600 cursor-pointer hover:underline"
+              >
+                Sign-up
+              </button>
               </div>
             </form>
-          ) : !signupType ? (
+            ) : !signupType ? (
             // Pre-signup: Select individual or organization
             <div className="space-y-18">
               <h2 className="text-[#222836]  font-inter text-center text-[20px] font-semibold leading-[24px] tracking-[-0.48px]">

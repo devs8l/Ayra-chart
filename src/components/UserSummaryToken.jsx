@@ -3,7 +3,7 @@ import { MedContext } from '../context/MedContext';
 import { X } from 'lucide-react'; // Import the X icon
 import { ChatContext } from '../context/ChatContext';
 
-const UserSummaryToken = ({ userId, summaryMessages,isUser }) => {
+const UserSummaryToken = ({ userId, summaryMessages, isUser }) => {
     const {
         setActiveSummaryData,
         setIsSummaryBoxActive,
@@ -86,12 +86,10 @@ const UserSummaryToken = ({ userId, summaryMessages,isUser }) => {
                                 {summary.visitData.medicine?.name && `${summary.visitData.medicine.name}`}
                                 {summary.problems && 'Problems'}
                                 {summary.visitData.healthMetrics && `${summary.visitData.healthMetrics.metric} Reading`}
-                                {summary.visitData.vaccines && `${summary.visitData.vaccines.name}`}
-                                {summary.visitData.vitalData && `${summary.visitData.vitalData.vitalName}`}
+                                {summary.visitData.vaccines && `Vaccines`}
+                                {summary.visitData.vitalData?.vitalName && `${summary.visitData.vitalData.vitalName}`}
                                 {summary.visitData.visitType === 'medicalVisit' && (
-                                    `Doctor Visit` +
-                                    (summary.diagnosis ? ` for ${summary.diagnosis}` : '') +
-                                    (summary.formattedDate ? ` on ${summary.formattedDate}` : '')
+                                    `${summary.visitData.type || 'Doctor Visit'}`
                                 )}
                                 {!summary.visitType && !summary.allergies && !summary.medicine?.name &&
                                     !summary.problems && !summary.healthMetrics && !summary.vaccines &&

@@ -18,7 +18,7 @@ const SummaryNoteBox = ({
     } = useContext(MedContext);
 
     console.log("Current Visit Data:", currentVisit);
-    
+
 
     const handleBoxClick = () => {
         if (!isSummaryBoxActive) {
@@ -75,17 +75,18 @@ const SummaryNoteBox = ({
             return `${currentVisit.healthMetrics.metric} Reading`;
         }
         if (currentVisit?.vaccines) {
-            return `Vaccines: ${currentVisit.vaccines.name}`;
+            return `Vaccines`;
         }
         if (currentVisit?.vitalData) {
             return `Patient Vitals`;
         }
         if (currentVisit?.visitType === 'medicalVisit') {
             return (
-                `Doctor Visit` + ` for ${currentVisit.diagnosis}` + ` on ${currentVisit.formattedDate} .`
+                `${currentVisit.type || 'Doctor Visit'}`
+                
             );
         }
-        if( currentVisit?.visitType === 'chart') {
+        if (currentVisit?.visitType === 'chart') {
             return `${currentVisit.noteType}`;
         }
         return 'Summary';
@@ -110,45 +111,39 @@ const SummaryNoteBox = ({
         if (currentVisit?.vaccines) {
             if (currentVisit?.vaccines.status === 'Completed') {
                 return `Patient was vaccinated with ${currentVisit?.vaccines.name} (${currentVisit?.vaccines.type}) on ${formatDate(currentVisit?.vaccines.date)}`;
-              } else {
-                return `Patient has ${currentVisit?.vaccines.name} (${currentVisit?.vaccines.type}) in progress, started on ${formatDate(currentVisit?.vaccines.date)}`;
-              }
+            } else {
+                return `${currentVisit?.vaccines.name} (${currentVisit?.vaccines.type}) in progress, started on ${formatDate(currentVisit?.vaccines.date)}`;
+            }
         }
         if (currentVisit?.vitalData) {
             return `Patient's ${currentVisit.vitalData.vitalName}: ${currentVisit.vitalData.vitalValue}`;
         }
-        
+
         if (currentVisit?.visitType === 'medicalVisit') {
-            // Format prescriptions if they exist
-            const prescriptionsText = currentVisit.prescriptions?.length
-                ? `Prescribed: ${currentVisit.prescriptions.map(p =>
-                    `${p.medicine} (${p.dosage} for ${p.duration})`
-                ).join(', ')}. `
+            // Format provider information
+            const providerText = currentVisit.provider
+                ? ` with ${currentVisit.provider}`
                 : '';
 
-            // Format treatments if they exist
-            const treatmentsText = currentVisit.treatments?.length
-                ? `Treatments performed: ${currentVisit.treatments.map(t =>
-                    `${t.procedure} with result: ${t.result}`
-                ).join('; ')}. `
+            // Format location if available
+            const locationText = currentVisit.location
+                ? ` at ${currentVisit.location}`
                 : '';
 
-            // Format notes if they exist
-            const notesText = currentVisit.notes
-                ? `Clinical notes: ${currentVisit.notes}. `
+            // Format status
+            const statusText = currentVisit.status
+                ? ` (Status: ${currentVisit.status})`
                 : '';
 
             return (
-                `Medical visit with Dr. ${currentVisit.doctor.name} (${currentVisit.doctor.specialization}) ` +
+                `Medical visit${providerText}${locationText} ` +
                 `on ${currentVisit.formattedDate}. ` +
-                `Primary diagnosis: ${currentVisit.diagnosis}. ` +
-                `Consultation duration: ${currentVisit.duration}. ` +
-                prescriptionsText +
-                treatmentsText +
-                notesText
+                `Visit type: ${currentVisit.type || 'General Consultation'}. ` +
+                `Reason: ${currentVisit.reason}. ` +
+                statusText
             );
         }
-        if( currentVisit?.visitType === 'chart') {
+        if (currentVisit?.visitType === 'chart') {
             return `${currentVisit.notes}`;
         }
         return 'No content available';

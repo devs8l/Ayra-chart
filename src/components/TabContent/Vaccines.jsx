@@ -1,18 +1,21 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { ChevronDown, AlignLeft } from 'lucide-react';
 import { ChatContext } from '../../context/ChatContext';
 import { MedContext } from '../../context/MedContext';
+import { fetchVaccines } from '../../Services/userData'; // Import the API function
 
-const Vaccines = ({patientHistory}) => {
+const Vaccines = () => {
   const [filter, setFilter] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const { setIsLoadingFollowUp } = useContext(MedContext)
-  const { addSummaryMessage } = useContext(ChatContext)
-  const patientId = patientHistory?.rawData?._id
+  const [vaccines, setVaccines] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { setIsLoadingFollowUp, selectedUser } = useContext(MedContext);
+  const { addSummaryMessage } = useContext(ChatContext);
+  const patientId = selectedUser?.resource?.id;
 
   const handleVaccineClick = async (vaccine) => {
     setIsLoadingFollowUp(true);
-    console.log("Loading started");
     const visitData = {
       vaccines: {
         name: vaccine.name,
@@ -20,23 +23,86 @@ const Vaccines = ({patientHistory}) => {
         type: vaccine.type,
         status: vaccine.status
       },
-      icon:'/Vaccines.svg'
-    }
+      icon: '/Vaccines.svg'
+    };
     addSummaryMessage(patientId, visitData, []);
   };
-  // Temporary vaccine data
-  const tempVaccines = [
-    { name: 'COVID-19 Vaccine', date: '2023-01-15', type: 'Viral', status: 'Completed' },
-    { name: 'Influenza Vaccine', date: '2023-10-20', type: 'Seasonal', status: 'Completed' },
-    { name: 'Tetanus Booster', date: '2022-05-10', type: 'Booster', status: 'Completed' },
-    { name: 'HPV Vaccine', date: '2023-03-05', type: 'Preventive', status: 'In Progress' },
-    { name: 'Hepatitis B Vaccine', date: '2021-11-30', type: 'Preventive', status: 'Completed' },
-  ];
+
+  // Fetch vaccines from API
+  useEffect(() => {
+    const loadVaccines = async () => {
+      if (!patientId) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const vaccinesData = await fetchVaccines(patientId);
+
+        if (vaccinesData) {
+          // Process FHIR immunization data
+          const vaccinesList = vaccinesData.entry?.map(entry => {
+            const resource = entry.resource;
+
+            // Extract vaccine name
+            const vaccineName = resource.vaccineCode?.coding?.[0]?.display ||
+              resource.vaccineCode?.text ||
+              'Unknown vaccine';
+
+            // Extract date
+            const date = resource.occurrenceDateTime || resource.recorded || 'Unknown date';
+
+            // Determine vaccine type based on name
+            let type = 'Other';
+            const vaccineNameLower = vaccineName.toLowerCase();
+
+            if (vaccineNameLower.includes('covid') || vaccineNameLower.includes('corona')) {
+              type = 'Viral';
+            } else if (vaccineNameLower.includes('influenza') || vaccineNameLower.includes('flu')) {
+              type = 'Seasonal';
+            } else if (vaccineNameLower.includes('tetanus') || vaccineNameLower.includes('diphtheria') ||
+              vaccineNameLower.includes('pertussis') || vaccineNameLower.includes('tdap')) {
+              type = 'Booster';
+            } else if (vaccineNameLower.includes('hpv') || vaccineNameLower.includes('human papillomavirus')) {
+              type = 'Preventive';
+            } else if (vaccineNameLower.includes('hepatitis')) {
+              type = 'Preventive';
+            }
+
+            // Determine status
+            const status = resource.status === 'completed' ? 'Completed' :
+              resource.status === 'not-done' ? 'Not Done' :
+                resource.status || 'Unknown';
+
+            return {
+              id: resource.id,
+              name: vaccineName,
+              date: date,
+              type: type,
+              status: status,
+              lotNumber: resource.lotNumber,
+              expirationDate: resource.expirationDate,
+              site: resource.site?.coding?.[0]?.display
+            };
+          }) || [];
+
+          setVaccines(vaccinesList);
+        }
+      } catch (err) {
+        console.error('Error loading vaccines:', err);
+        setError('Failed to load vaccines. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadVaccines();
+  }, [patientId]);
 
   // Filter vaccines based on selection
   const filteredVaccines = filter === 'All'
-    ? tempVaccines
-    : tempVaccines.filter(vaccine => vaccine.type === filter || vaccine.status === filter);
+    ? vaccines
+    : vaccines.filter(vaccine => vaccine.type === filter || vaccine.status === filter);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -46,6 +112,28 @@ const Vaccines = ({patientHistory}) => {
     setFilter(value);
     setIsDropdownOpen(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="p-4 bg-white border border-gray-200 rounded-md animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <div className="text-sm text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,29 +190,42 @@ const Vaccines = ({patientHistory}) => {
 
       {/* Vaccines list */}
       <div className="flex flex-col gap-2">
-        {filteredVaccines.map((vaccine, index) => (
-          <div
-            key={index}
-            onClick={() => handleVaccineClick(vaccine)}
-            className="flex flex-col p-4 cursor-pointer bg-white border border-gray-200 rounded-md"
-          >
-            <div className="flex justify-between items-start">
-              <div className="text-sm">{vaccine.name}</div>
-              <div className="text-sm text-gray-500">
-                {new Date(vaccine.date).toLocaleDateString()}
+        {filteredVaccines.length > 0 ? (
+          filteredVaccines.map((vaccine, index) => (
+            <div
+              key={vaccine.id || index}
+              onClick={() => handleVaccineClick(vaccine)}
+              className="flex flex-col p-4 cursor-pointer bg-white border border-gray-200 rounded-md hover:bg-blue-50 transition-colors"
+            >
+              <div className="flex justify-between items-start">
+                <div className="text-sm font-medium">{vaccine.name}</div>
+                <div className="text-sm text-gray-500">
+                  {new Date(vaccine.date).toLocaleDateString()}
+                </div>
               </div>
+              <div className="flex justify-between mt-1">
+                <span className="text-sm text-gray-600">Type: {vaccine.type}</span>
+                <span className={`text-sm px-2 py-1 rounded-full ${vaccine.status === 'Completed'
+                    ? 'bg-green-100 text-green-800'
+                    : vaccine.status === 'Not Done'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                  {vaccine.status}
+                </span>
+              </div>
+              {vaccine.lotNumber && (
+                <div className="text-xs text-gray-500 mt-1">
+                  <span className="font-medium">Lot #:</span> {vaccine.lotNumber}
+                </div>
+              )}
             </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-sm text-gray-600">Type: {vaccine.type}</span>
-              <span className={`text-sm px-2 py-1 rounded-full ${vaccine.status === 'Completed'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                {vaccine.status}
-              </span>
-            </div>
+          ))
+        ) : (
+          <div className="p-4 text-sm text-center text-gray-500 bg-white border border-gray-200 rounded-md">
+            No vaccines found.
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

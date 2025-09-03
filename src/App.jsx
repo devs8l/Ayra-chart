@@ -1,6 +1,6 @@
 // App.jsx
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { Toaster } from 'react-hot-toast';
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -12,18 +12,34 @@ import Events from "./components/Events";
 import DocumentPreview from "./components/DocumentPreview";
 import { MedContext } from "./context/MedContext";
 import Error from "./pages/Error";
-import Sidebar from "./components/MainSidebar"
+import Sidebar from "./components/MainSidebar";
+import { showWelcomeToast } from "./components/CustomToast";
 
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout, login, isExpanded } = useContext(MedContext);
+  const hasShownWelcome = useRef(false); // To prevent showing toast multiple times
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
+      hasShownWelcome.current = false; // Reset when logged out
     }
   }, [isAuthenticated, navigate]);
+
+  // Show welcome toast when authentication becomes true
+  useEffect(() => {
+    if (isAuthenticated && !hasShownWelcome.current) {
+      // Use a small timeout to ensure the toast appears after the page transition
+      const timer = setTimeout(() => {
+        showWelcomeToast('Doctor');
+        hasShownWelcome.current = true;
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   return (
     <>

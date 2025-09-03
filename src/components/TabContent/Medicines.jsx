@@ -2,19 +2,22 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ChevronDown, AlignLeft } from 'lucide-react';
 import { MedContext } from '../../context/MedContext';
 import { ChatContext } from '../../context/ChatContext';
+import { fetchMedications } from '../../Services/userData'; // Import the API function
 
-const Medicines = ({ patientHistory }) => {
+const Medicines = () => {
   const [filter, setFilter] = useState('All Medications');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [medicines, setMedicines] = useState([]);
-  const { setIsLoadingFollowUp } = useContext(MedContext)
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { setIsLoadingFollowUp, selectedUser } = useContext(MedContext);
   const [categories, setCategories] = useState(['All Medications']);
-  const { addSummaryMessage } = useContext(ChatContext)
-  const patientId = patientHistory?.rawData?._id
+  const { addSummaryMessage } = useContext(ChatContext);
+
+  const patientId = selectedUser?.resource?.id;
 
   const handleMedicinesClick = async (medicine) => {
     setIsLoadingFollowUp(true);
-    console.log("Loading started");
     const visitData = {
       medicine: medicine,
       icon: '/Medicines.svg',
@@ -22,50 +25,76 @@ const Medicines = ({ patientHistory }) => {
     addSummaryMessage(patientId, visitData, []);
   };
 
-  // Process patient data to extract medications
+  // Fetch medications from API
   useEffect(() => {
-    if (patientHistory?.rawData?.visit_ids) {
-      const medicationList = [];
+    const loadMedications = async () => {
+      if (!patientId) return;
 
-      // Extract medications from each visit
-      patientHistory.rawData.visit_ids.forEach(visit => {
-        if (visit.prescription_ids?.length > 0) {
-          visit.prescription_ids.forEach(prescription => {
-            // Determine category based on diagnosis
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const medicationsData = await fetchMedications(patientId);
+
+        if (medicationsData) {
+          // Process FHIR medication data
+          const medicationList = medicationsData.entry?.map(entry => {
+            const resource = entry.resource;
+
+            // Extract medication name
+            const medicationName = resource.medicationCodeableConcept?.text || 'Unknown medication';
+
+            // Extract date
+            const date = resource.authoredOn ? new Date(resource.authoredOn).toLocaleDateString() : 'Unknown date';
+
+            // Determine category based on medication name
             let category = 'Other';
-            const diagnosis = visit.diagnosis?.toLowerCase() || '';
+            const medName = medicationName.toLowerCase();
 
-            if (diagnosis.includes('blood pressure')) {
-              category = 'Blood Pressure';
-            } else if (diagnosis.includes('blood sugar') || diagnosis.includes('diabetes')) {
+            if (medName.includes('metformin') || medName.includes('glucophage') ||
+              medName.includes('insulin') || medName.includes('glipizide')) {
               category = 'Blood Sugar';
-            } else if (diagnosis.includes('migraine')) {
+            } else if (medName.includes('lisinopril') || medName.includes('amlodipine') ||
+              medName.includes('atenolol') || medName.includes('hydrochlorothiazide')) {
+              category = 'Blood Pressure';
+            } else if (medName.includes('sumatriptan') || medName.includes('rizatriptan') ||
+              medName.includes('topiramate')) {
               category = 'Neurological';
-            } else if (diagnosis.includes('anxiety') || diagnosis.includes('depression')) {
+            } else if (medName.includes('sertraline') || medName.includes('fluoxetine') ||
+              medName.includes('escitalopram') || medName.includes('duloxetine')) {
               category = 'Mental Health';
-            } else if (diagnosis.includes('asthma')) {
+            } else if (medName.includes('albuterol') || medName.includes('inhaler') ||
+              medName.includes('montelukast')) {
               category = 'Respiratory';
             }
 
-            medicationList.push({
-              name: prescription.medicine_name,
-              dosage: `${prescription.dosage}, ${prescription.route || 'Orally'}`,
-              duration: prescription.duration,
+            return {
+              id: resource.id,
+              name: medicationName,
+              dosage: 'Dosage not specified', // FHIR data may not include dosage
+              duration: 'Duration not specified', // FHIR data may not include duration
               category: category,
-              date: visit.visit_date,
-              diagnosis: visit.diagnosis
-            });
-          });
+              date: date,
+              diagnosis: 'Diagnosis not specified' // FHIR data may not include diagnosis
+            };
+          }) || [];
+
+          setMedicines(medicationList);
+
+          // Get unique categories, sorted alphabetically
+          const uniqueCategories = ['All Medications', ...new Set(medicationList.map(med => med.category))].sort();
+          setCategories(uniqueCategories);
         }
-      });
+      } catch (err) {
+        console.error('Error loading medications:', err);
+        setError('Failed to load medications. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-      setMedicines(medicationList);
-
-      // Get unique categories, sorted alphabetically
-      const uniqueCategories = ['All Medications', ...new Set(medicationList.map(med => med.category))].sort();
-      setCategories(uniqueCategories);
-    }
-  }, [patientHistory]);
+    loadMedications();
+  }, [patientId]);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -82,9 +111,34 @@ const Medicines = ({ patientHistory }) => {
     : medicines.filter(med => med.category === filter);
 
   // Sort medicines by date (newest first)
-  const sortedMedicines = [...filteredMedicines].sort((a, b) =>
-    new Date(b.date) - new Date(a.date)
-  );
+  const sortedMedicines = [...filteredMedicines].sort((a, b) => {
+    // Handle cases where date might be 'Unknown date'
+    if (a.date === 'Unknown date') return 1;
+    if (b.date === 'Unknown date') return -1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="p-4 bg-white border border-gray-200 rounded-md animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <div className="text-sm text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -123,19 +177,19 @@ const Medicines = ({ patientHistory }) => {
         {sortedMedicines.length > 0 ? (
           sortedMedicines.map((medicine, index) => (
             <div
-              key={index}
+              key={medicine.id || index}
               onClick={() => handleMedicinesClick(medicine)}
-              className="flex cursor-pointer flex-col px-4 py-4 bg-white border border-gray-200 rounded-md"
+              className="flex cursor-pointer flex-col px-4 py-4 bg-white border border-gray-200 rounded-md hover:bg-blue-50 transition-colors"
             >
               <div className="flex justify-between items-start">
                 <div className="text-sm font-medium">{medicine.name}</div>
                 <div className="text-xs text-gray-500">
-                  {new Date(medicine.date).toLocaleDateString()}
+                  {medicine.date}
                 </div>
               </div>
               <div className="text-sm text-gray-600 mt-1">{medicine.dosage}</div>
               <div className="text-xs text-gray-500 mt-1">
-                <span className="font-medium">For:</span> {medicine.diagnosis}
+                <span className="font-medium">Category:</span> {medicine.category}
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 <span className="font-medium">Duration:</span> {medicine.duration}
@@ -144,7 +198,7 @@ const Medicines = ({ patientHistory }) => {
           ))
         ) : (
           <div className="px-4 py-4 text-sm text-center text-gray-500 bg-white border border-gray-200 rounded-md">
-            No medications found for this category.
+            No medications found.
           </div>
         )}
       </div>
