@@ -315,73 +315,73 @@ const LoginSignup = () => {
             // Login Form
             <form onSubmit={handleLoginSubmit} className="space-y-8 p-10">
               <div>
-              <div className="text-xs text-gray-500 mb-3">Tenant ID</div>
-              <input
-                type="text"
-                name="tenantId"
-                placeholder="Enter Tenant ID"
-                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                value={loginCredentials.tenantId}
-                onChange={handleLoginChange}
-              />
+                <div className="text-xs text-gray-500 mb-3">Tenant ID</div>
+                <input
+                  type="text"
+                  name="tenantId"
+                  placeholder="Enter Tenant ID"
+                  className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                  value={loginCredentials.tenantId}
+                  onChange={handleLoginChange}
+                />
               </div>
               <div>
-              <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter Email ID"
-                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                value={loginCredentials.email}
-                onChange={handleLoginChange}
-              />
+                <div className="text-xs text-gray-500 mb-3">Enter Email ID</div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter Email ID"
+                  className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                  value={loginCredentials.email}
+                  onChange={handleLoginChange}
+                />
               </div>
 
               <div>
-              <div className="text-xs text-gray-500 mb-3">Password</div>
-              <div className="relative">
-                <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Enter Password"
-                className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
-                value={loginCredentials.password}
-                onChange={handleLoginChange}
-                />
-                <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute cursor-pointer right-2 top-1/2 transform -translate-y-1/2"
-                >
-                {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
-                </button>
-              </div>
+                <div className="text-xs text-gray-500 mb-3">Password</div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Enter Password"
+                    className="w-full px-4 py-3 border-b border-gray-300 focus:outline-none focus:border-blue-500"
+                    value={loginCredentials.password}
+                    onChange={handleLoginChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute cursor-pointer right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
+                  </button>
+                </div>
               </div>
 
               {error && (
-              <div className="text-red-500 text-sm mt-2">{error}</div>
+                <div className="text-red-500 text-sm mt-2">{error}</div>
               )}
 
               <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors mt-8 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-              {isSubmitting ? 'Logging in...' : 'Login'}
+                {isSubmitting ? 'Logging in...' : 'Login'}
               </button>
 
               <div className="text-center text-sm pt-6">
-              Don't have an account?{' '}
-              <button
-                type="button"
-                onClick={toggleForm}
-                className="text-blue-600 cursor-pointer hover:underline"
-              >
-                Sign-up
-              </button>
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={toggleForm}
+                  className="text-blue-600 cursor-pointer hover:underline"
+                >
+                  Sign-up
+                </button>
               </div>
             </form>
-            ) : !signupType ? (
+          ) : !signupType ? (
             // Pre-signup: Select individual or organization
             <div className="space-y-18">
               <h2 className="text-[#222836]  font-inter text-center text-[20px] font-semibold leading-[24px] tracking-[-0.48px]">
@@ -391,32 +391,42 @@ const LoginSignup = () => {
               <div className="flex gap-6 justify-center">
                 <button
                   onClick={() => selectSignupType('individual')}
-                  className="p-2 flex flex-col cursor-pointer items-center"
+                  className="p-2 flex flex-col cursor-pointer items-center group"
                 >
-                  <div className="w-40 h-40 flex items-center justify-center">
+                  <div className="w-40 h-40 border-3 group-hover:border-[#1A73E8] rounded-2xl overflow-hidden px-2 pt-8 flex items-center justify-center relative">
                     <img
-                      src="/ind.svg"
+                      src="/indblack.svg"
                       alt="Individual"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full scale-[0.9] object-contain absolute transition-opacity duration-300 group-hover:opacity-0"
+                    />
+                    <img
+                      src="/ind1.svg"
+                      alt="Individual Hover"
+                      className="w-full h-full scale-[0.9] object-contain absolute opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                     />
                   </div>
-                  <div className="font-medium text-sm mt-8 whitespace-nowrap flex items-center gap-3">
+                  <div className="font-medium text-sm mt-8 whitespace-nowrap group-hover:text-[#1A73E8] flex items-center gap-3">
                     Individual Practitioner
                   </div>
                 </button>
 
                 <button
                   onClick={() => selectSignupType('organization')}
-                  className="p-2 flex flex-col cursor-pointer items-center"
+                  className="p-2 flex flex-col cursor-pointer items-center group"
                 >
-                  <div className="w-40 h-40 flex items-center justify-center">
+                  <div className="w-40 h-40 border-3 overflow-hidden group-hover:border-[#1A73E8] rounded-2xl px-2 pt-8 flex items-center justify-center relative">
                     <img
-                      src="/org.svg"
+                      src="/orgblack.svg"
                       alt="Organization"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full  scale-[0.9] object-contain mt-3 absolute transition-opacity duration-300 group-hover:opacity-0"
+                    />
+                    <img
+                      src="/org1.svg"
+                      alt="Organization Hover"
+                      className="w-full h-full scale-[0.9] object-contain mt-3 absolute opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                     />
                   </div>
-                  <div className="font-medium text-sm mt-8 whitespace-nowrap flex items-center gap-3">
+                  <div className="font-medium text-sm mt-8 whitespace-nowrap group-hover:text-[#1A73E8] flex items-center gap-3">
                     Organization
                   </div>
                 </button>

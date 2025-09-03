@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const Sidebar = ({ isExpanded }) => {
-    const { setIsExpanded, isUserSelected, setSearchQuery, searchQuery, setIsPatientExpanded } = useContext(MedContext);
+    const { setIsExpanded, isUserSelected, setSearchQuery, searchQuery, setIsPatientExpanded, logout } = useContext(MedContext);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
     const searchInputRef = useRef(null);
@@ -243,6 +243,7 @@ const Sidebar = ({ isExpanded }) => {
                                             className="flex items-center gap-3 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md cursor-pointer text-red-500"
                                             onClick={() => {
                                                 setIsProfileDropdownOpen(false);
+                                                logout();
                                             }}
                                         >
                                             <LogOut size={16} />
