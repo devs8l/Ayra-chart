@@ -46,7 +46,6 @@ export const userLogin = async (data) => {
       body: JSON.stringify({
         identifier: data.email,
         password: data.password,
-        tenant_id: data.tenantId
       }),
     });
 
